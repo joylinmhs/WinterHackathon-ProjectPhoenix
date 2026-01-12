@@ -4,36 +4,36 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* Theme CSS Variables */
-  --color-primary: #673ab7;
-  --color-primary-light: #9c27b0;
-  --color-primary-dark: #4a148c;
+  /* Theme CSS Variables - Bold & Vibrant */
+  --color-primary: #2563eb;        /* Bold Blue */
+  --color-primary-light: #3b82f6;  /* Lighter Blue */
+  --color-primary-dark: #1d4ed8;   /* Darker Blue */
 
-  --color-secondary: #ba68c8;
-  --color-secondary-light: #e1bee7;
-  --color-secondary-dark: #7b1fa2;
+  --color-secondary: #059669;      /* Bold Green */
+  --color-secondary-light: #10b981; /* Lighter Green */
+  --color-secondary-dark: #047857;  /* Darker Green */
 
-  --color-accent: #ab47bc;
-  --color-success: #7b1fa2;
-  --color-warning: #ab47bc;
-  --color-error: #e91e63;
+  --color-accent: #ea580c;         /* Bold Orange */
+  --color-success: #059669;        /* Green for success */
+  --color-warning: #f59e0b;        /* Yellow/Orange for warning */
+  --color-error: #dc2626;          /* Bold Red for errors */
 
-  --color-background: #f3e5f5;
-  --color-surface: #ffffff;
-  --color-surface-light: #fafafa;
+  --color-background: #f8fafc;     /* Light blue-gray background */
+  --color-surface: #ffffff;        /* White surfaces */
+  --color-surface-light: #f1f5f9;  /* Light gray surfaces */
 
-  --color-text-primary: #4a148c;
-  --color-text-secondary: #6a1b9a;
-  --color-text-light: #9c27b0;
+  --color-text-primary: #1e293b;    /* Dark slate for primary text */
+  --color-text-secondary: #475569;  /* Medium slate for secondary text */
+  --color-text-light: #64748b;      /* Light slate for muted text */
 
-  --color-border: #ce93d8;
-  --shadow-color: rgba(106, 27, 154, 0.1);
+  --color-border: #cbd5e1;          /* Light border color */
+  --shadow-color: rgba(37, 99, 235, 0.1); /* Blue-tinted shadow */
 
   /* Spacing */
   --spacing-xs: 4px;
@@ -52,10 +52,10 @@ body {
   --border-radius-round: 50%;
 
   /* Shadows */
-  --shadow-sm: 0 2px 4px rgba(106, 27, 154, 0.1);
-  --shadow-md: 0 4px 8px rgba(106, 27, 154, 0.15);
-  --shadow-lg: 0 8px 16px rgba(106, 27, 154, 0.2);
-  --shadow-xl: 0 12px 24px rgba(106, 27, 154, 0.25);
+  --shadow-sm: 0 2px 4px rgba(37, 99, 235, 0.1);
+  --shadow-md: 0 4px 8px rgba(37, 99, 235, 0.15);
+  --shadow-lg: 0 8px 16px rgba(37, 99, 235, 0.2);
+  --shadow-xl: 0 12px 24px rgba(37, 99, 235, 0.25);
 
   /* Transitions */
   --transition-fast: 0.15s ease;
