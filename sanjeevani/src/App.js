@@ -60,7 +60,7 @@ function App() {
     );
   }
 
-  // User view
+  // User view (with sidebar)
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#f8f9fa" }}>
       <div style={headerStyle}>
@@ -81,7 +81,7 @@ function App() {
           </button>
         </div>
       </div>
-      <div style={mainContentStyle}>
+      <div style={userMainContentStyle}>
         <User />
       </div>
     </div>
@@ -127,6 +127,10 @@ const mainContentStyle = {
   maxWidth: "1200px",
   margin: "0 auto",
   padding: "30px 20px"
+};
+
+const userMainContentStyle = {
+  // No margin needed since User component handles its own layout with sidebar
 };
 
 export default App;
