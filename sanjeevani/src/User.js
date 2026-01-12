@@ -7,131 +7,92 @@ function User() {
   const [userLocation, setUserLocation] = useState(null);
   const [bestHospital, setBestHospital] = useState(null);
 
-  // 📍 Get patient current location
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setUserLocation({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude
-        });
-      },
-      () => alert("Location access required for emergency assistance")
+      pos => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => alert("Location permission required")
     );
   }, []);
 
-  // 🏥 Fetch hospitals
   useEffect(() => {
     async function fetchHospitals() {
-      const snapshot = await getDocs(collection(db, "hospitals"));
-      setHospitals(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      const snap = await getDocs(collection(db, "hospitals"));
+      setHospitals(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }
     fetchHospitals();
   }, []);
 
-  // 📏 Distance calculator
-  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const distance = (a,b,c,d) => {
     const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(lat1 * Math.PI / 180) *
-      Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon / 2) ** 2;
-    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    const dLat = (c-a) * Math.PI/180;
+    const dLon = (d-b) * Math.PI/180;
+    const x = Math.sin(dLat/2)**2 +
+              Math.cos(a*Math.PI/180) *
+              Math.cos(c*Math.PI/180) *
+              Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
   };
 
-  // 🧠 Recommend best hospital
   useEffect(() => {
-    if (!userLocation || hospitals.length === 0) return;
+    if(!userLocation || hospitals.length===0) return;
 
-    const withDistance = hospitals.map(h => ({
+    const ranked = hospitals.map(h=>({
       ...h,
-      distance: calculateDistance(userLocation.lat, userLocation.lng, h.lat, h.lng)
-    }));
+      distance: distance(userLocation.lat,userLocation.lng,h.lat,h.lng)
+    }))
+    .filter(h=>h.distance<=200 && h.icuBeds>0 && h.oxygen && h.doctors)
+    .sort((a,b)=>a.distance-b.distance);
 
-    const findBest = (radius) =>
-      withDistance
-        .filter(h =>
-          h.distance <= radius &&
-          h.icuBeds > 0 &&
-          h.oxygen &&
-          h.doctors
-        )
-        .map(h => ({
-          ...h,
-          score:
-            (h.icuBeds * 5) +
-            (h.oxygen ? 10 : 0) +
-            (h.doctors ? 8 : 0) -
-            (h.distance * 2)
-        }))
-        .sort((a, b) => b.score - a.score)[0];
+    setBestHospital(ranked[0] || null);
+  },[userLocation,hospitals]);
 
-    const best = findBest(25) || findBest(200);
-    setBestHospital(best || null);
-  }, [userLocation, hospitals]);
-
-  // 🚨 Notify hospital
   const notifyHospital = async () => {
-    if (!bestHospital || !userLocation) return;
-
-    await addDoc(collection(db, "emergencyRequests"), {
-      hospitalId: bestHospital.id,
-      emergencyType: "Accident",
-      lat: userLocation.lat,
-      lng: userLocation.lng,
-      status: "Pending",
-      timestamp: serverTimestamp()
+    if(!bestHospital) return;
+    await addDoc(collection(db,"emergencyRequests"),{
+      hospitalId:bestHospital.id,
+      lat:userLocation.lat,
+      lng:userLocation.lng,
+      status:"Pending",
+      timestamp:serverTimestamp()
     });
-
-    alert("Hospital notified successfully!");
+    alert("Hospital notified");
   };
 
   return (
-    <div>
-      <h2>🚑 Emergency Assistance</h2>
-
-      {!userLocation && <p>Detecting your location...</p>}
-
-      {!bestHospital && (
-        <p style={{ color: "red" }}>
-          No suitable hospital found nearby.
-        </p>
-      )}
+  <div style={{ display:"flex", justifyContent:"center" }}>
+    <div className="card">
+      <h2 className="title">🚑 Emergency Assistance</h2>
 
       {bestHospital && (
-        <div style={{
-          border: "2px solid green",
-          padding: "15px",
-          borderRadius: "8px",
-          backgroundColor: "#ecfdf5"
-        }}>
-          <h3>🏥 Recommended Hospital</h3>
+        <>
+          <span className="badge">Recommended Hospital</span>
+
           <p><strong>Name:</strong> {bestHospital.name}</p>
           <p><strong>Distance:</strong> {bestHospital.distance.toFixed(2)} km</p>
           <p><strong>ICU Beds:</strong> {bestHospital.icuBeds}</p>
-          <p><strong>Oxygen:</strong> Available</p>
-          <p><strong>Doctors:</strong> Available</p>
 
           <button
             onClick={notifyHospital}
             style={{
               marginTop: "10px",
               padding: "10px",
-              backgroundColor: "#e74c3c",
+              width: "100%",
+              backgroundColor: "#dc2626",
               color: "white",
               border: "none",
-              borderRadius: "5px"
+              borderRadius: "8px",
+              fontSize: "16px",
+              cursor: "pointer"
             }}
           >
-            🚨 Notify Hospital
+            🚨 Notify Hospital Now
           </button>
-        </div>
+        </>
       )}
     </div>
-  );
+  </div>
+);
+
 }
 
 export default User;
