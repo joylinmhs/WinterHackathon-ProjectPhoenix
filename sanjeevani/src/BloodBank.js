@@ -26,6 +26,7 @@ function BloodBank() {
   }, []);
 
   const distance = (a, b, c, d) => {
+    if ([a, b, c, d].some(val => val === undefined || val === null || isNaN(val))) return NaN;
     const R = 6371;
     const dLat = (c - a) * Math.PI / 180;
     const dLon = (d - b) * Math.PI / 180;
@@ -38,6 +39,11 @@ function BloodBank() {
 
   const requestBlood = async (bloodBank, bloodType) => {
     if (!userLocation || !bloodType) return alert("Please select blood type and ensure location is available");
+
+    const quantity = bloodBank.bloodTypes && bloodBank.bloodTypes[bloodType] ? bloodBank.bloodTypes[bloodType] : 0;
+    if (quantity <= 0) {
+      return alert(`Sorry, ${bloodType} is currently unavailable at ${bloodBank.name}.`);
+    }
 
     await addDoc(collection(db, "bloodRequests"), {
       bloodBankId: bloodBank.id,
@@ -102,7 +108,11 @@ function BloodBank() {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
           <AnimatePresence>
             {bloodBanks.map((bloodBank, index) => {
-              const dist = userLocation ? distance(userLocation.lat, userLocation.lng, bloodBank.lat, bloodBank.lng) : 0;
+              const rawDist = userLocation ? distance(userLocation.lat, userLocation.lng, bloodBank.lat, bloodBank.lng) : null;
+              const dist = isNaN(rawDist) ? null : rawDist;
+
+              const quantity = selectedBloodType && bloodBank.bloodTypes ? (bloodBank.bloodTypes[selectedBloodType] || 0) : 0;
+              const isAvailable = selectedBloodType && quantity > 0;
 
               return (
                 <motion.div
@@ -124,7 +134,7 @@ function BloodBank() {
                         <p className="flex items-center gap-2"><span>⏰</span> {bloodBank.hours}</p>
                       </div>
                     </div>
-                    {userLocation && (
+                    {dist !== null && (
                       <div className="bg-slate-900 px-3 py-1 rounded-lg border border-slate-700 text-slate-300 text-sm font-mono">
                         {dist.toFixed(1)} km
                       </div>
@@ -153,15 +163,15 @@ function BloodBank() {
 
                   <button
                     onClick={() => requestBlood(bloodBank, selectedBloodType)}
-                    disabled={!selectedBloodType}
+                    disabled={!isAvailable}
                     className={`w-full py-4 rounded-xl font-bold shadow-lg transition-all duration-300 flex items-center justify-center gap-2
-                      ${selectedBloodType
+                      ${isAvailable
                         ? "bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white shadow-red-600/20 hover:shadow-red-600/40 transform hover:-translate-y-1"
                         : "bg-slate-700 text-slate-500 cursor-not-allowed border border-slate-600"
                       }`}
                   >
                     {selectedBloodType
-                      ? <><span>🩸</span> Request {selectedBloodType} Blood</>
+                      ? (quantity > 0 ? <><span>🩸</span> Request {selectedBloodType} Blood</> : "Out of Stock")
                       : "Select Type to Request"
                     }
                   </button>

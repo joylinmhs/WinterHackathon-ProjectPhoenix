@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "./firebase";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -23,6 +23,7 @@ function AmbulanceAvailability() {
   }, []);
 
   const distance = (a, b, c, d) => {
+    if ([a, b, c, d].some(val => val === undefined || val === null || isNaN(val))) return NaN;
     const R = 6371;
     const dLat = (c - a) * Math.PI / 180;
     const dLon = (d - b) * Math.PI / 180;
@@ -31,19 +32,6 @@ function AmbulanceAvailability() {
       Math.cos(c * Math.PI / 180) *
       Math.sin(dLon / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
-  };
-
-  const requestAmbulance = async (ambulance) => {
-    if (!userLocation) return alert("Location not available");
-
-    await addDoc(collection(db, "ambulanceRequests"), {
-      ambulanceId: ambulance.id,
-      lat: userLocation.lat,
-      lng: userLocation.lng,
-      status: "Requested",
-      timestamp: serverTimestamp()
-    });
-    alert("Ambulance requested successfully!");
   };
 
   return (
@@ -73,7 +61,9 @@ function AmbulanceAvailability() {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <AnimatePresence>
             {ambulances.map((ambulance, index) => {
-              const dist = userLocation ? distance(userLocation.lat, userLocation.lng, ambulance.lat, ambulance.lng) : 0;
+              const rawDist = userLocation ? distance(userLocation.lat, userLocation.lng, ambulance.lat, ambulance.lng) : null;
+              const dist = isNaN(rawDist) ? null : rawDist;
+
               // Use Remote schema fields: vehicleNumber, driverName, isAvailable, but fallback to HEAD: name, available
               const name = ambulance.name || `Vehicle ${ambulance.vehicleNumber}`;
               const available = ambulance.available !== undefined ? ambulance.available : ambulance.isAvailable;
@@ -117,31 +107,13 @@ function AmbulanceAvailability() {
                       <span className="bg-slate-800 p-1.5 rounded-lg text-blue-400">📞</span>
                       {phone}
                     </p>
-                    {userLocation && (ambulance.lat || ambulance.lng) && (
+                    {dist !== null && (
                       <p className="text-slate-300 flex items-center gap-3">
                         <span className="bg-slate-800 p-1.5 rounded-lg text-purple-400">📏</span>
                         <span>{dist.toFixed(2)} km away</span>
                       </p>
                     )}
                   </div>
-
-                  <button
-                    onClick={() => requestAmbulance(ambulance)}
-                    disabled={!available}
-                    className={`w-full py-3 rounded-xl font-bold shadow-lg transition-all duration-300 flex items-center justify-center gap-2 relative z-10 overflow-hidden
-                      ${available
-                        ? "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/20 hover:shadow-blue-600/40"
-                        : "bg-slate-700 text-slate-500 cursor-not-allowed"
-                      }`}
-                  >
-                    {available ? (
-                      <>
-                        <span className="text-lg">🚑</span> Request Now
-                      </>
-                    ) : (
-                      "Unavailable"
-                    )}
-                  </button>
                 </motion.div>
               );
             })}

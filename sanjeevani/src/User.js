@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { collection, onSnapshot, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "./firebase";
 import Sidebar from "./Sidebar";
 import AmbulanceAvailability from "./AmbulanceAvailability";
@@ -30,6 +30,7 @@ function User() {
   }, []);
 
   const distance = (a, b, c, d) => {
+    if ([a, b, c, d].some(val => val === undefined || val === null || isNaN(val))) return NaN;
     const R = 6371;
     const dLat = (c - a) * Math.PI / 180;
     const dLon = (d - b) * Math.PI / 180;
@@ -43,29 +44,19 @@ function User() {
   useEffect(() => {
     if (!userLocation || hospitals.length === 0) return;
 
-    const ranked = hospitals.map(h => ({
-      ...h,
-      distance: distance(userLocation.lat, userLocation.lng, h.lat, h.lng)
-    }))
+    const ranked = hospitals.map(h => {
+      const d = distance(userLocation.lat, userLocation.lng, h.lat, h.lng);
+      return {
+        ...h,
+        distance: isNaN(d) ? null : d
+      };
+    })
       .filter(h => h.icuBeds > 0 || h.oxygen || h.doctors) // Merged Logic: Show if ANY resource is available
-      .sort((a, b) => a.distance - b.distance);
+      .sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
 
     setRankedHospitals(ranked);
     setBestHospital(ranked[0] || null);
   }, [userLocation, hospitals]);
-
-  const notifyHospital = async (hospital) => {
-    if (!hospital) return;
-
-    await addDoc(collection(db, "emergencyRequests"), {
-      hospitalId: hospital.id,
-      lat: userLocation.lat,
-      lng: userLocation.lng,
-      status: "Pending",
-      timestamp: serverTimestamp()
-    });
-    alert(`Emergency alert sent to ${hospital.name}`);
-  };
 
   const renderCurrentPage = () => {
     switch (currentPage) {
@@ -122,9 +113,11 @@ function User() {
                       <h3 className="text-xl font-bold flex items-center gap-2">
                         <span>{index === 0 ? '🏆 Best Match' : '🏥 Option ' + (index + 1)}</span>
                       </h3>
-                      <span className="px-3 py-1 bg-black/20 rounded-full text-sm backdrop-blur-sm border border-white/10 font-mono">
-                        {hospital.distance.toFixed(2)} km away
-                      </span>
+                      {hospital.distance !== null && (
+                        <span className="px-3 py-1 bg-black/20 rounded-full text-sm backdrop-blur-sm border border-white/10 font-mono">
+                          {hospital.distance.toFixed(2)} km away
+                        </span>
+                      )}
                     </div>
 
                     <div className="p-8">
@@ -151,25 +144,10 @@ function User() {
                           href={`https://www.google.com/maps/dir/?api=1&destination=${hospital.lat},${hospital.lng}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors border border-slate-600"
+                          className="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors border border-slate-600"
                         >
                           🗺️ Directions
                         </a>
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => notifyHospital(hospital)}
-                          className="flex-[2] bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold py-4 px-6 rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.4)] flex items-center justify-center gap-3 transition-colors text-lg border border-red-400/20"
-                        >
-                          <motion.span
-                            animate={{ scale: [1, 1.2, 1] }}
-                            transition={{ duration: 1.5, repeat: Infinity }}
-                            className="text-2xl"
-                          >
-                            🚨
-                          </motion.span>
-                          NOTIFY HOSPITAL
-                        </motion.button>
                       </div>
                     </div>
                   </motion.div>
