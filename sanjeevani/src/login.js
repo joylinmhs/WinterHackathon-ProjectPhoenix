@@ -140,16 +140,26 @@ function Login({ setLoggedIn, setHospitalId }) {
     <div className="flex min-h-screen bg-slate-900 font-sans overflow-hidden text-gray-100">
       {/* Left Panel - Branding & Visuals */}
       <div className="hidden lg:flex flex-1 relative bg-gradient-to-br from-indigo-950 via-slate-900 to-blue-950 overflow-hidden items-center justify-center p-12 border-r border-slate-800">
-        {/* Animated Background Elements */}
+        {/* Animated Background Elements - Enhanced */}
         <motion.div
-          animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 mix-blend-screen"
+          animate={{ x: [0, 120, 0], y: [0, -120, 0], scale: [1, 1.4, 1] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-0 right-0 w-[550px] h-[550px] bg-blue-400/45 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 mix-blend-screen"
         />
         <motion.div
-          animate={{ scale: [1, 1.3, 1], rotate: [0, -90, 0] }}
-          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-          className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 mix-blend-screen"
+          animate={{ x: [0, -100, 0], y: [0, 100, 0], scale: [1, 1.4, 1] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+          className="absolute bottom-0 left-0 w-[450px] h-[450px] bg-purple-400/45 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2 mix-blend-screen"
+        />
+        <motion.div
+          animate={{ x: [0, 100, 0], y: [0, -80, 0], scale: [1, 1.25, 1] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          className="absolute top-1/3 left-1/4 w-[420px] h-[420px] bg-cyan-400/15 rounded-full blur-3xl mix-blend-screen"
+        />
+        <motion.div
+          animate={{ x: [0, -70, 0], y: [0, 70, 0], scale: [1, 1.3, 1] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          className="absolute bottom-1/3 right-1/4 w-[380px] h-[380px] bg-pink-400/15 rounded-full blur-3xl mix-blend-screen"
         />
 
         <div className="relative z-10 max-w-2xl text-center">
@@ -159,7 +169,12 @@ function Login({ setLoggedIn, setHospitalId }) {
             transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.2 }}
             className="mb-8 inline-block"
           >
-            <div className="text-8xl mb-4 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">🏥</div>
+            <motion.div
+              animate={{ y: [0, -20, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <div className="text-8xl mb-4 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">🏥</div>
+            </motion.div>
           </motion.div>
 
           <motion.div

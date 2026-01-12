@@ -25,7 +25,7 @@ function App() {
   // Route based on user role
   if (loggedIn === "admin") {
     return (
-      <div style={{ minHeight: "100vh", backgroundColor: "var(--color-background)" }}>
+      <div style={{ minHeight: "100vh", backgroundColor: "#0f172a" }}>
         <header className="header">
           <div className="header-content">
             <h1 className="header-title">
@@ -52,10 +52,10 @@ function App() {
 
   // User view (with sidebar)
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "var(--color-background)" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", backgroundColor: "var(--color-background)", overflow: "hidden" }}>
       <header className="header">
         <div className="header-content">
-          <h1 className="header-title">
+          <h1 className="header-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             🏥 Sanjeevani – Emergency Hospital Finder
           </h1>
           <button
@@ -66,9 +66,9 @@ function App() {
           </button>
         </div>
       </header>
-      <div className="user-main-content">
+      <main style={{ flex: 1, position: "relative", overflow: "hidden" }}>
         <User />
-      </div>
+      </main>
     </div>
   );
 }

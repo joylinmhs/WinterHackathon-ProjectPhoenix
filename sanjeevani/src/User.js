@@ -252,7 +252,7 @@ function User() {
       </AnimatePresence>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col relative overflow-hidden bg-slate-900">
+      <div className="flex-1 flex flex-col relative bg-slate-900">
         {/* Header/Toggle for Mobile */}
         <div className="md:hidden p-4 bg-slate-800 shadow-sm flex items-center gap-3 z-10 transition-all border-b border-slate-700">
           <button
@@ -264,15 +264,8 @@ function User() {
           <span className="font-bold text-white">Sanjeevani</span>
         </div>
 
-        {/* Desktop Toggle */}
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className={`absolute top-6 z-30 p-2 bg-slate-800 rounded-full shadow-lg border border-slate-700 hover:bg-slate-700 transition-all duration-300 hidden md:flex items-center justify-center w-10 h-10 text-slate-300 hover:text-white
-            ${sidebarOpen ? 'left-[-20px] ml-[290px]' : 'left-4'}`}
-          title="Toggle Sidebar"
-        >
-          {sidebarOpen ? '◀' : '▶'}
-        </button>
+        {/* Desktop Toggle Removed */}
+
 
         <main className="flex-1 overflow-y-auto bg-slate-900 relative">
           <div className="max-w-7xl mx-auto w-full">
