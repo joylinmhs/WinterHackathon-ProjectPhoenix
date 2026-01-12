@@ -170,9 +170,6 @@ function Login({ setLoggedIn, setHospitalId }) {
             <h1 className="text-6xl font-black tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
               Sanjeevani
             </h1>
-            <p className="text-2xl font-light text-blue-200 mb-8 tracking-wide">
-              Smart Emergency Hospital Finder
-            </p>
             <div className="h-1 w-24 bg-blue-500/50 mx-auto rounded-full mb-8 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
             <p className="text-lg text-slate-300 leading-relaxed max-w-lg mx-auto">
               Connecting patients with emergency medical assistance in critical moments.
