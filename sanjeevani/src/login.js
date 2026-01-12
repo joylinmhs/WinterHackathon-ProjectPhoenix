@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 import { db } from "./firebase";
 
@@ -9,23 +10,38 @@ function Login({ setLoggedIn, setHospitalId }) {
   const [hospitalAuth, setHospitalAuth] = useState({ email: "", password: "", name: "", lat: "", lng: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [activeRole, setActiveRole] = useState(null);
 
-  const ADMIN_PASSWORD = "admin123"; // Change this to your desired password
+  const ADMIN_PASSWORD = "admin123";
 
   const handleUserClick = () => {
-    setLoggedIn("user");
+    setActiveRole("user");
+    // Add a small delay for the animation
+    setTimeout(() => setLoggedIn("user"), 400);
   };
 
   const handleAdminClick = () => {
-    setStep("adminPassword");
+    setActiveRole("admin");
+    setTimeout(() => {
+      setStep("adminPassword");
+      setActiveRole(null);
+    }, 400);
   };
+
+  const handleHospitalClick = () => {
+    setActiveRole("hospital");
+    setTimeout(() => {
+      setStep("hospitalLogin");
+      setActiveRole(null);
+    }, 400);
+  }
 
   const handleAdminPasswordSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    // Simulate async check (you can add backend verification here)
+    // Simulate async check
     setTimeout(() => {
       if (adminPassword === ADMIN_PASSWORD) {
         setLoggedIn("admin");
@@ -34,7 +50,7 @@ function Login({ setLoggedIn, setHospitalId }) {
         setAdminPassword("");
       }
       setLoading(false);
-    }, 500);
+    }, 800);
   };
 
   const handleHospitalLogin = async (e) => {
@@ -104,416 +120,325 @@ function Login({ setLoggedIn, setHospitalId }) {
     setIsRegistering(false);
   };
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, ease: "easeOut" }
+    },
+    exit: { opacity: 0, y: -20, transition: { duration: 0.3 } }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
+
   return (
-    <div style={containerStyle}>
-      {/* Left Side - Branding & Info */}
-      <div style={leftPanelStyle}>
-        <div style={brandingStyle}>
-          <h1 style={{ fontSize: "48px", margin: "0 0 20px 0" }}>🏥</h1>
-          <h2 style={{
-            fontSize: "36px",
-            margin: "0 0 15px 0",
-            fontWeight: "700",
-            color: "#ffffff"
-          }}>
-            Sanjeevani
-          </h2>
-          <p style={{
-            fontSize: "18px",
-            margin: "0 0 30px 0",
-            color: "#e0e0e0",
-            fontWeight: "300"
-          }}>
-            Smart Emergency Hospital Finder
-          </p>
-          <p style={{
-            fontSize: "14px",
-            color: "#b0bec5",
-            lineHeight: "1.8"
-          }}>
-            Connecting patients with emergency medical assistance in critical moments. Secure, reliable, and life-saving.
-          </p>
+    <div className="flex min-h-screen bg-slate-900 font-sans overflow-hidden text-gray-100">
+      {/* Left Panel - Branding & Visuals */}
+      <div className="hidden lg:flex flex-1 relative bg-gradient-to-br from-indigo-950 via-slate-900 to-blue-950 overflow-hidden items-center justify-center p-12 border-r border-slate-800">
+        {/* Animated Background Elements */}
+        <motion.div
+          animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 mix-blend-screen"
+        />
+        <motion.div
+          animate={{ scale: [1, 1.3, 1], rotate: [0, -90, 0] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 mix-blend-screen"
+        />
+
+        <div className="relative z-10 max-w-2xl text-center">
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.2 }}
+            className="mb-8 inline-block"
+          >
+            <div className="text-8xl mb-4 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">🏥</div>
+          </motion.div>
+
+          <motion.div
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            <h1 className="text-6xl font-black tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
+              Sanjeevani
+            </h1>
+            <p className="text-2xl font-light text-blue-200 mb-8 tracking-wide">
+              Smart Emergency Hospital Finder
+            </p>
+            <div className="h-1 w-24 bg-blue-500/50 mx-auto rounded-full mb-8 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+            <p className="text-lg text-slate-300 leading-relaxed max-w-lg mx-auto">
+              Connecting patients with emergency medical assistance in critical moments.
+              Secure, reliable, and life-saving technology when it matters most.
+            </p>
+          </motion.div>
         </div>
       </div>
 
-      {/* Right Side - Content */}
-      <div style={rightPanelStyle}>
-        <div style={formContainerStyle}>
-          {step === "roleSelection" ? (
-            <>
-              <h2 style={{
-                textAlign: "center",
-                color: "#1976d2",
-                marginBottom: "10px",
-                fontSize: "28px",
-                fontWeight: "700"
-              }}>
-                Welcome to Sanjeevani
-              </h2>
-              <p style={{
-                textAlign: "center",
-                color: "#757575",
-                marginBottom: "40px",
-                fontSize: "14px"
-              }}>
-                Select your role to continue
-              </p>
+      {/* Right Panel - Interactive Form */}
+      <div className="flex-1 flex items-center justify-center p-6 relative bg-slate-900">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none" />
 
-              <div style={roleButtonsContainerStyle}>
-                <button
-                  onClick={handleUserClick}
-                  style={userButtonStyle}
-                >
-                  <div style={{ fontSize: "40px", marginBottom: "15px" }}>👤</div>
-                  <div style={{ fontSize: "18px", fontWeight: "700", marginBottom: "8px" }}>
-                    Patient
-                  </div>
-                  <div style={{ fontSize: "13px", color: "#666" }}>
-                    Emergency assistance
-                  </div>
-                </button>
-
-                <button
-                  onClick={handleAdminClick}
-                  style={adminButtonStyle}
-                >
-                  <div style={{ fontSize: "40px", marginBottom: "15px" }}>🏢</div>
-                  <div style={{ fontSize: "18px", fontWeight: "700", marginBottom: "8px" }}>
-                    Hospital Admin
-                  </div>
-                  <div style={{ fontSize: "13px", color: "#666" }}>
-                    Create hospitals
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => setStep("hospitalLogin")}
-                  style={{
-                    ...roleButtonBase,
-                    borderColor: "#34495e",
-                    boxShadow: "0 4px 12px rgba(44, 62, 80, 0.15)"
-                  }}
-                >
-                  <div style={{ fontSize: "40px", marginBottom: "15px" }}>🏥</div>
-                  <div style={{ fontSize: "18px", fontWeight: "700", marginBottom: "8px" }}>
-                    Hospital Portal
-                  </div>
-                  <div style={{ fontSize: "13px", color: "#666" }}>
-                    Manage requests
-                  </div>
-                </button>
-              </div>
-            </>
-          ) : step === "hospitalLogin" ? (
-            <>
-              <button
-                onClick={handleBackClick}
-                style={backButtonStyle}
+        <div className="w-full max-w-md relative z-10">
+          <AnimatePresence mode="wait">
+            {step === "roleSelection" ? (
+              <motion.div
+                key="roleSelection"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="bg-slate-800 rounded-3xl shadow-2xl shadow-black/50 p-8 md:p-10 border border-slate-700"
               >
-                Back &larr;
-              </button>
+                <div className="text-center mb-10">
+                  <h2 className="text-3xl font-bold text-white mb-3">Welcome Back</h2>
+                  <p className="text-slate-400">Please select your role to continue</p>
+                </div>
 
-              <h2 style={{
-                textAlign: "center",
-                color: "#2c3e50",
-                marginBottom: "10px",
-                fontSize: "28px",
-                fontWeight: "700",
-                marginTop: "30px"
-              }}>
-                {isRegistering ? "Hospital Registration" : "Hospital Login"}
-              </h2>
-              <p style={{
-                textAlign: "center",
-                color: "#757575",
-                marginBottom: "35px",
-                fontSize: "14px"
-              }}>
-                {isRegistering ? "Join the network to save lives" : "Enter your hospital credentials"}
-              </p>
+                <div className="space-y-4">
+                  <motion.button
+                    variants={itemVariants}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleUserClick}
+                    className={`w-full p-4 rounded-2xl border transition-all duration-300 flex items-center gap-5 group text-left
+                      ${activeRole === 'user'
+                        ? 'border-blue-500 bg-blue-500/10 ring-2 ring-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.2)]'
+                        : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/10'}`}
+                  >
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-colors
+                      ${activeRole === 'user' ? 'bg-blue-500 text-white' : 'bg-slate-700 text-blue-400 group-hover:bg-blue-500 group-hover:text-white'}`}>
+                      👤
+                    </div>
+                    <div>
+                      <h3 className={`text-lg font-bold transition-colors ${activeRole === 'user' ? 'text-blue-400' : 'text-gray-200 group-hover:text-white'}`}>
+                        Patient Access
+                      </h3>
+                      <p className="text-xs text-gray-500 group-hover:text-gray-400">Find emergency assistance nearby</p>
+                    </div>
+                  </motion.button>
 
-              <form onSubmit={isRegistering ? handleHospitalRegister : handleHospitalLogin}>
-                {isRegistering && (
-                  <>
-                    <div style={formGroupStyle}>
-                      <label style={labelStyle}>HOSPITAL NAME</label>
+                  <motion.button
+                    variants={itemVariants}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleHospitalClick}
+                    className={`w-full p-4 rounded-2xl border transition-all duration-300 flex items-center gap-5 group text-left
+                      ${activeRole === 'hospital'
+                        ? 'border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+                        : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700 hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-500/10'}`}
+                  >
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-colors
+                      ${activeRole === 'hospital' ? 'bg-emerald-500 text-white' : 'bg-slate-700 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white'}`}>
+                      🩺
+                    </div>
+                    <div>
+                      <h3 className={`text-lg font-bold transition-colors ${activeRole === 'hospital' ? 'text-emerald-400' : 'text-gray-200 group-hover:text-white'}`}>
+                        Hospital Portal
+                      </h3>
+                      <p className="text-xs text-gray-500 group-hover:text-gray-400">Manage hospital requests</p>
+                    </div>
+                  </motion.button>
+
+                  <motion.button
+                    variants={itemVariants}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleAdminClick}
+                    className={`w-full p-4 rounded-2xl border transition-all duration-300 flex items-center gap-5 group text-left
+                      ${activeRole === 'admin'
+                        ? 'border-red-500 bg-red-500/10 ring-2 ring-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)]'
+                        : 'border-slate-700 bg-slate-800/50 hover:bg-slate-700 hover:border-red-400 hover:shadow-lg hover:shadow-red-500/10'}`}
+                  >
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-colors
+                      ${activeRole === 'admin' ? 'bg-red-500 text-white' : 'bg-slate-700 text-red-400 group-hover:bg-red-500 group-hover:text-white'}`}>
+                      🏥
+                    </div>
+                    <div>
+                      <h3 className={`text-lg font-bold transition-colors ${activeRole === 'admin' ? 'text-red-400' : 'text-gray-200 group-hover:text-white'}`}>
+                        Hospital Admin
+                      </h3>
+                      <p className="text-xs text-gray-500 group-hover:text-gray-400">Create new facilities</p>
+                    </div>
+                  </motion.button>
+                </div>
+
+                <div className="mt-8 text-center">
+                  <p className="text-xs text-slate-500">By continuing, you agree to our Terms of Service</p>
+                </div>
+              </motion.div>
+            ) : step === "adminPassword" ? (
+              <motion.div
+                key="adminPassword"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="bg-slate-800 rounded-3xl shadow-2xl shadow-black/50 p-8 md:p-10 border border-slate-700"
+              >
+                <button
+                  onClick={handleBackClick}
+                  className="mb-8 flex items-center text-sm font-medium text-slate-400 hover:text-white transition-colors"
+                >
+                  <span className="mr-2">←</span> Back to Role Selection
+                </button>
+
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 text-red-500 border border-red-500/20">
+                    🔐
+                  </div>
+                  <h2 className="text-2xl font-bold text-white">Admin Authentication</h2>
+                  <p className="text-slate-400 mt-2">Secure access area</p>
+                </div>
+
+                <form onSubmit={handleAdminPasswordSubmit} className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-bold text-slate-300 mb-2 ml-1">
+                      PASSWORD
+                    </label>
+                    <div className="relative">
                       <input
-                        type="text"
-                        value={hospitalAuth.name}
-                        onChange={(e) => setHospitalAuth({ ...hospitalAuth, name: e.target.value })}
-                        placeholder="e.g. City General Hospital"
+                        type="password"
+                        placeholder="Enter admin key..."
+                        value={adminPassword}
                         required
-                        style={inputStyle}
+                        onChange={(e) => setAdminPassword(e.target.value)}
+                        className="w-full px-5 py-4 rounded-xl border border-slate-600 bg-slate-900 text-white placeholder-slate-500 focus:border-red-500 focus:ring-2 focus:ring-red-500/20 outline-none transition-all duration-300 font-medium"
+                        autoFocus
                       />
                     </div>
-                    <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                      <div style={{ flex: 1 }}>
-                        <label style={labelStyle}>LATITUDE</label>
-                        <input
-                          type="number"
-                          step="any"
-                          value={hospitalAuth.lat}
-                          onChange={(e) => setHospitalAuth({ ...hospitalAuth, lat: e.target.value })}
-                          placeholder="e.g. 12.9716"
-                          required
-                          style={inputStyle}
-                        />
+                  </div>
+
+                  <AnimatePresence>
+                    {error && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="p-4 bg-red-500/10 border-l-4 border-red-500 rounded-r-xl flex items-center"
+                      >
+                        <span className="text-xl mr-3">⚠️</span>
+                        <p className="text-red-400 text-sm font-medium">{error}</p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="submit"
+                    disabled={loading}
+                    className={`w-full py-4 rounded-xl text-white font-bold text-lg shadow-lg shadow-red-500/20 transition-all duration-300
+                      ${loading
+                        ? 'bg-slate-600 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400'}`}
+                  >
+                    {loading ? "Verifying..." : "Unlock Dashboard"}
+                  </motion.button>
+                </form>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="hospitalLogin"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="bg-slate-800 rounded-3xl shadow-2xl shadow-black/50 p-8 md:p-10 border border-slate-700"
+              >
+                <button
+                  onClick={handleBackClick}
+                  className="mb-8 flex items-center text-sm font-medium text-slate-400 hover:text-white transition-colors"
+                >
+                  <span className="mr-2">←</span> Back to Role Selection
+                </button>
+
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 text-emerald-500 border border-emerald-500/20">
+                    🩺
+                  </div>
+                  <h2 className="text-2xl font-bold text-white">{isRegistering ? "Hospital Registration" : "Hospital Portal"}</h2>
+                  <p className="text-slate-400 mt-2">{isRegistering ? "Join the network" : "Manage your facility"}</p>
+                </div>
+
+                <form onSubmit={isRegistering ? handleHospitalRegister : handleHospitalLogin} className="space-y-6">
+                  {isRegistering && (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-bold text-slate-300 mb-2 ml-1">HOSPITAL NAME</label>
+                        <input type="text" placeholder="e.g. City General" value={hospitalAuth.name} onChange={(e) => setHospitalAuth({ ...hospitalAuth, name: e.target.value })} className="w-full px-5 py-3 rounded-xl border border-slate-600 bg-slate-900 text-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none" required />
                       </div>
-                      <div style={{ flex: 1 }}>
-                        <label style={labelStyle}>LONGITUDE</label>
-                        <input
-                          type="number"
-                          step="any"
-                          value={hospitalAuth.lng}
-                          onChange={(e) => setHospitalAuth({ ...hospitalAuth, lng: e.target.value })}
-                          placeholder="e.g. 77.5946"
-                          required
-                          style={inputStyle}
-                        />
+                      <div className="flex gap-4">
+                        <div>
+                          <label className="block text-sm font-bold text-slate-300 mb-2 ml-1">LATITUDE</label>
+                          <input type="number" step="any" placeholder="12.97" value={hospitalAuth.lat} onChange={(e) => setHospitalAuth({ ...hospitalAuth, lat: e.target.value })} className="w-full px-5 py-3 rounded-xl border border-slate-600 bg-slate-900 text-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none" required />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-slate-300 mb-2 ml-1">LONGITUDE</label>
+                          <input type="number" step="any" placeholder="77.59" value={hospitalAuth.lng} onChange={(e) => setHospitalAuth({ ...hospitalAuth, lng: e.target.value })} className="w-full px-5 py-3 rounded-xl border border-slate-600 bg-slate-900 text-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none" required />
+                        </div>
                       </div>
                     </div>
-                  </>
-                )}
+                  )}
 
-                <div style={formGroupStyle}>
-                  <label style={labelStyle}>EMAIL</label>
-                  <input
-                    type="email"
-                    value={hospitalAuth.email}
-                    onChange={(e) => setHospitalAuth({ ...hospitalAuth, email: e.target.value })}
-                    placeholder="hospital@example.com"
-                    required
-                    style={inputStyle}
-                  />
-                </div>
-
-                <div style={formGroupStyle}>
-                  <label style={labelStyle}>PASSWORD</label>
-                  <div className="password-input-wrapper">
-                    <input
-                      type="password"
-                      value={hospitalAuth.password}
-                      onChange={(e) => setHospitalAuth({ ...hospitalAuth, password: e.target.value })}
-                      placeholder="Enter password"
-                      required
-                      style={inputStyle}
-                    />
+                  <div>
+                    <label className="block text-sm font-bold text-slate-300 mb-2 ml-1">EMAIL</label>
+                    <input type="email" placeholder="admin@hospital.com" value={hospitalAuth.email} onChange={(e) => setHospitalAuth({ ...hospitalAuth, email: e.target.value })} className="w-full px-5 py-3 rounded-xl border border-slate-600 bg-slate-900 text-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none" required />
                   </div>
-                </div>
-
-                {error && <div style={errorBoxStyle}>⚠️ {error}</div>}
-
-                <button type="submit" style={{ ...submitButtonStyle, backgroundColor: "#2c3e50" }} disabled={loading}>
-                  {loading ? "Processing..." : (isRegistering ? "Register Hospital" : "Login to Dashboard")}
-                </button>
-              </form>
-
-              <p style={{ marginTop: "20px", textAlign: "center", color: "#666", fontSize: "14px" }}>
-                {isRegistering ? "Already have an account? " : "New Hospital? "}
-                <span
-                  onClick={() => setIsRegistering(!isRegistering)}
-                  style={{ color: "#3498db", cursor: "pointer", fontWeight: "bold", textDecoration: "underline" }}
-                >
-                  {isRegistering ? "Login here" : "Register here"}
-                </span>
-              </p>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={handleBackClick}
-                style={backButtonStyle}
-              >
-                Back ←
-              </button>
-
-              <h2 style={{
-                textAlign: "center",
-                color: "#d32f2f",
-                marginBottom: "10px",
-                fontSize: "28px",
-                fontWeight: "700",
-                marginTop: "30px"
-              }}>
-                Admin Access
-              </h2>
-              <p style={{
-                textAlign: "center",
-                color: "#757575",
-                marginBottom: "35px",
-                fontSize: "14px"
-              }}>
-                Enter the admin password to continue
-              </p>
-
-              <form onSubmit={handleAdminPasswordSubmit}>
-                <div style={formGroupStyle}>
-                  <label style={labelStyle}>Admin Password</label>
-                  <input
-                    type="password"
-                    placeholder="Enter admin password"
-                    value={adminPassword}
-                    required
-                    onChange={(e) => setAdminPassword(e.target.value)}
-                    style={inputStyle}
-                    autoFocus
-                  />
-                </div>
-
-                {error && (
-                  <div style={errorBoxStyle}>
-                    <span style={{ marginRight: "8px" }}>⚠️</span>
-                    {error}
+                  <div>
+                    <label className="block text-sm font-bold text-slate-300 mb-2 ml-1">PASSWORD</label>
+                    <input type="password" placeholder="••••••••" value={hospitalAuth.password} onChange={(e) => setHospitalAuth({ ...hospitalAuth, password: e.target.value })} className="w-full px-5 py-3 rounded-xl border border-slate-600 bg-slate-900 text-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none" required />
                   </div>
-                )}
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  style={{
-                    ...submitButtonStyle,
-                    opacity: loading ? 0.7 : 1,
-                    cursor: loading ? "not-allowed" : "pointer"
-                  }}
-                >
-                  {loading ? "Verifying..." : "Access Admin Dashboard"}
-                </button>
-              </form>
-            </>
-          )}
+                  <AnimatePresence>
+                    {error && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="p-4 bg-red-500/10 border-l-4 border-red-500 rounded-r-xl flex items-center"
+                      >
+                        <span className="text-xl mr-3">⚠️</span>
+                        <p className="text-red-400 text-sm font-medium">{error}</p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="submit"
+                    disabled={loading}
+                    className={`w-full py-4 rounded-xl text-white font-bold text-lg shadow-lg shadow-emerald-500/20 transition-all duration-300
+                      ${loading
+                        ? 'bg-slate-600 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400'}`}
+                  >
+                    {loading ? "Processing..." : (isRegistering ? "Register Hospital" : "Login to Portal")}
+                  </motion.button>
+                </form>
+
+                <p className="text-center mt-6 text-slate-400">
+                  {isRegistering ? "Already registered?" : "New facility?"} <button onClick={() => setIsRegistering(!isRegistering)} className="text-emerald-400 hover:text-emerald-300 font-bold underline ml-1">{isRegistering ? "Login here" : "Register here"}</button>
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <div className="absolute bottom-6 text-center w-full">
+          <p className="text-slate-600 text-sm font-medium">© 2026 Sanjeevani Project</p>
         </div>
       </div>
     </div>
   );
 }
-
-const containerStyle = {
-  display: "flex",
-  height: "100vh",
-  backgroundColor: "#ffffff",
-  fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-};
-
-const leftPanelStyle = {
-  flex: 1,
-  background: "linear-gradient(135deg, #1976d2 0%, #0d47a1 100%)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "40px",
-  color: "white"
-};
-
-const brandingStyle = {
-  textAlign: "center"
-};
-
-const rightPanelStyle = {
-  flex: 1,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "40px",
-  backgroundColor: "#f8f9fa"
-};
-
-const formContainerStyle = {
-  width: "100%",
-  maxWidth: "380px",
-  position: "relative"
-};
-
-const roleButtonsContainerStyle = {
-  display: "flex",
-  gap: "20px",
-  flexDirection: "column"
-};
-
-const roleButtonBase = {
-  padding: "30px 20px",
-  border: "2px solid #e0e0e0",
-  borderRadius: "12px",
-  cursor: "pointer",
-  fontSize: "14px",
-  transition: "all 0.3s ease",
-  outline: "none",
-  backgroundColor: "#ffffff",
-  textAlign: "center"
-};
-
-const userButtonStyle = {
-  ...roleButtonBase,
-  borderColor: "#1976d2",
-  boxShadow: "0 4px 12px rgba(25, 118, 210, 0.15)"
-};
-
-const adminButtonStyle = {
-  ...roleButtonBase,
-  borderColor: "#d32f2f",
-  boxShadow: "0 4px 12px rgba(211, 47, 47, 0.15)"
-};
-
-const backButtonStyle = {
-  background: "none",
-  border: "none",
-  color: "#1976d2",
-  fontSize: "14px",
-  fontWeight: "600",
-  cursor: "pointer",
-  padding: "0",
-  transition: "color 0.3s ease"
-};
-
-const formGroupStyle = {
-  marginBottom: "20px"
-};
-
-const labelStyle = {
-  display: "block",
-  fontSize: "13px",
-  fontWeight: "700",
-  color: "#333",
-  marginBottom: "8px",
-  textTransform: "uppercase",
-  letterSpacing: "0.5px"
-};
-
-const inputStyle = {
-  width: "100%",
-  padding: "12px 14px",
-  borderRadius: "6px",
-  border: "1.5px solid #e0e0e0",
-  fontSize: "14px",
-  boxSizing: "border-box",
-  transition: "all 0.3s ease",
-  fontFamily: "inherit",
-  outline: "none"
-};
-
-const submitButtonStyle = {
-  width: "100%",
-  padding: "13px 16px",
-  backgroundColor: "#d32f2f",
-  color: "white",
-  border: "none",
-  borderRadius: "6px",
-  cursor: "pointer",
-  fontSize: "15px",
-  fontWeight: "700",
-  marginTop: "10px",
-  transition: "all 0.3s ease",
-  boxShadow: "0 2px 8px rgba(211, 47, 47, 0.3)"
-};
-const errorBoxStyle = {
-  backgroundColor: "#ffebee",
-  color: "#c62828",
-  padding: "12px 14px",
-  borderRadius: "6px",
-  marginBottom: "20px",
-  fontSize: "13px",
-  border: "1px solid #ef5350",
-  display: "flex",
-  alignItems: "center"
-};
 
 export default Login;
