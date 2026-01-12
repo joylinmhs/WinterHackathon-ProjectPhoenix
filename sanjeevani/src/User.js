@@ -5,6 +5,7 @@ import Sidebar from "./Sidebar";
 import AmbulanceAvailability from "./AmbulanceAvailability";
 import BloodBank from "./BloodBank";
 import FirstAidTips from "./FirstAidTips";
+import "./App.css";
 
 function User() {
   const [currentPage, setCurrentPage] = useState("emergency");
@@ -75,14 +76,8 @@ function User() {
             {!userLocation && <p>Getting your location...</p>}
 
             {bestHospital && (
-              <div style={{
-                border: "2px solid #27ae60",
-                padding: "20px",
-                borderRadius: "10px",
-                backgroundColor: "#f8fff8",
-                marginBottom: "20px"
-              }}>
-                <h3 style={{ color: "#27ae60", marginTop: "0" }}>🏥 Recommended Hospital</h3>
+              <div className="emergency-card">
+                <h3 style={{ color: "var(--color-success)", marginTop: "0" }}>🏥 Recommended Hospital</h3>
                 <p><strong>Name:</strong> {bestHospital.name}</p>
                 <p><strong>Distance:</strong> {bestHospital.distance.toFixed(2)} km</p>
                 <p><strong>ICU Beds:</strong> {bestHospital.icuBeds}</p>
@@ -91,17 +86,8 @@ function User() {
 
                 <button
                   onClick={notifyHospital}
-                  style={{
-                    marginTop: "15px",
-                    padding: "12px 24px",
-                    backgroundColor: "#e74c3c",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "6px",
-                    fontSize: "16px",
-                    cursor: "pointer",
-                    fontWeight: "bold"
-                  }}
+                  className="btn btn-success"
+                  style={{ marginTop: "15px" }}
                 >
                   🚨 Notify Hospital Now
                 </button>
@@ -109,14 +95,12 @@ function User() {
             )}
 
             {!bestHospital && userLocation && (
-              <div style={{
-                border: "2px solid #f39c12",
-                padding: "20px",
-                borderRadius: "10px",
-                backgroundColor: "#fffbf0",
+              <div className="card" style={{
+                border: "2px solid var(--color-warning)",
+                backgroundColor: "rgba(171, 71, 188, 0.05)",
                 textAlign: "center"
               }}>
-                <h3 style={{ color: "#f39c12", marginTop: "0" }}>⚠️ No Suitable Hospital Found</h3>
+                <h3 style={{ color: "var(--color-warning)", marginTop: "0" }}>⚠️ No Suitable Hospital Found</h3>
                 <p>Please try the Ambulance service or contact emergency services directly.</p>
               </div>
             )}
@@ -134,61 +118,47 @@ function User() {
   };
 
   return (
-    <div style={{ position: "relative", minHeight: "calc(100vh - 80px)" }}>
-      {/* Sidebar Toggle Button */}
+    <div className="user-container">
+      {/* Sidebar Toggle Button - Always Visible */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="sidebar-toggle-fixed"
         style={{
-          ...sidebarToggleStyle,
-          left: sidebarOpen ? "310px" : "10px"
+          position: 'fixed',
+          top: '50%',
+          left: sidebarOpen ? '260px' : '10px',
+          transform: 'translateY(-50%)',
+          zIndex: 1000,
+          background: 'var(--color-primary)',
+          color: 'white',
+          border: 'none',
+          borderRadius: '50%',
+          width: '40px',
+          height: '40px',
+          fontSize: '18px',
+          cursor: 'pointer',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+          transition: 'left 0.3s ease, background-color 0.3s ease',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}
+        title={sidebarOpen ? 'Collapse Sidebar' : 'Expand Sidebar'}
       >
-        {sidebarOpen ? "◁" : "▷"}
+        {sidebarOpen ? "▷" : "◁"}
       </button>
 
       {/* Sidebar */}
-      <div style={{
-        position: "absolute",
-        left: sidebarOpen ? "0" : "-300px",
-        top: "0",
-        width: "300px",
-        height: "calc(100vh - 80px)",
-        transition: "left 0.3s ease",
-        zIndex: 100
-      }}>
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <Sidebar currentPage={currentPage} setCurrentPage={setCurrentPage} />
-      </div>
+      </aside>
 
       {/* Main Content */}
-      <div style={{
-        marginLeft: sidebarOpen ? "300px" : "0",
-        backgroundColor: "#f8f9fa",
-        minHeight: "calc(100vh - 80px)",
-        transition: "margin-left 0.3s ease",
-        position: "relative",
-        zIndex: 50
-      }}>
+      <main className={`user-main ${sidebarOpen ? 'sidebar-open' : ''}`}>
         {renderCurrentPage()}
-      </div>
+      </main>
     </div>
   );
 }
-
-const sidebarToggleStyle = {
-  position: "fixed",
-  top: "50%",
-  transform: "translateY(-50%)",
-  backgroundColor: "#1976d2",
-  color: "white",
-  border: "none",
-  borderRadius: "50%",
-  width: "40px",
-  height: "40px",
-  fontSize: "16px",
-  cursor: "pointer",
-  zIndex: 1001,
-  boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-  transition: "all 0.3s ease"
-};
 
 export default User;

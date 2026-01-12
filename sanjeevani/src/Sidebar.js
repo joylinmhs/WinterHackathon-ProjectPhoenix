@@ -1,4 +1,5 @@
-import { useState } from "react";
+import React from "react";
+import "./App.css";
 
 function Sidebar({ currentPage, setCurrentPage }) {
   const menuItems = [
@@ -29,122 +30,48 @@ function Sidebar({ currentPage, setCurrentPage }) {
   ];
 
   return (
-    <div style={sidebarStyle}>
-      <div style={sidebarHeaderStyle}>
-        <h3 style={{ margin: "0", color: "#1976d2", fontSize: "18px" }}>
+    <div>
+      <div className="sidebar-header">
+        <h3 style={{ margin: "0", color: "var(--color-primary)", fontSize: "18px" }}>
           🏥 Sanjeevani Services
         </h3>
-        <p style={{ margin: "5px 0 0 0", color: "#666", fontSize: "12px" }}>
+        <p style={{ margin: "5px 0 0 0", color: "var(--color-text-light)", fontSize: "12px" }}>
           Emergency Healthcare
         </p>
       </div>
 
-      <div style={menuContainerStyle}>
+      <div className="sidebar-menu">
         {menuItems.map(item => (
           <button
             key={item.id}
             onClick={() => setCurrentPage(item.id)}
-            style={{
-              ...menuItemStyle,
-              backgroundColor: currentPage === item.id ? "#e3f2fd" : "transparent",
-              borderLeft: currentPage === item.id ? "4px solid #1976d2" : "4px solid transparent"
-            }}
+            className={`sidebar-item ${currentPage === item.id ? 'active' : ''}`}
           >
-            <div style={menuIconStyle}>{item.icon}</div>
-            <div style={menuContentStyle}>
-              <div style={menuTitleStyle}>{item.name}</div>
-              <div style={menuDescriptionStyle}>{item.description}</div>
+            <div className="sidebar-icon">{item.icon}</div>
+            <div className="sidebar-content">
+              <div className="sidebar-title">{item.name}</div>
+              <div className="sidebar-description">{item.description}</div>
             </div>
           </button>
         ))}
       </div>
 
-      <div style={emergencyContactStyle}>
-        <h4 style={{ margin: "0 0 10px 0", color: "#d32f2f", fontSize: "14px" }}>
+      <div className="sidebar-emergency">
+        <h4 style={{ margin: "0 0 10px 0", color: "var(--color-error)", fontSize: "14px" }}>
           🚨 Emergency Contacts
         </h4>
-        <div style={contactItemStyle}>
+        <div className="sidebar-contact">
           <span style={{ fontWeight: "bold" }}>Ambulance:</span> 108
         </div>
-        <div style={contactItemStyle}>
+        <div className="sidebar-contact">
           <span style={{ fontWeight: "bold" }}>Police:</span> 100
         </div>
-        <div style={contactItemStyle}>
+        <div className="sidebar-contact">
           <span style={{ fontWeight: "bold" }}>Fire:</span> 101
         </div>
       </div>
     </div>
   );
 }
-
-const sidebarStyle = {
-  width: "250px",
-  height: "calc(100vh - 80px)",
-  backgroundColor: "#ffffff",
-  borderRight: "1px solid #e0e0e0",
-  padding: "20px",
-  overflowY: "auto",
-  boxShadow: "2px 0 8px rgba(0,0,0,0.1)"
-};
-
-const sidebarHeaderStyle = {
-  marginBottom: "30px",
-  paddingBottom: "15px",
-  borderBottom: "1px solid #e0e0e0"
-};
-
-const menuContainerStyle = {
-  marginBottom: "30px"
-};
-
-const menuItemStyle = {
-  width: "100%",
-  display: "flex",
-  alignItems: "center",
-  padding: "15px",
-  marginBottom: "8px",
-  border: "none",
-  borderRadius: "8px",
-  cursor: "pointer",
-  textAlign: "left",
-  transition: "all 0.3s ease",
-  backgroundColor: "transparent"
-};
-
-const menuIconStyle = {
-  fontSize: "24px",
-  marginRight: "12px",
-  minWidth: "24px"
-};
-
-const menuContentStyle = {
-  flex: 1
-};
-
-const menuTitleStyle = {
-  fontSize: "14px",
-  fontWeight: "600",
-  color: "#333",
-  marginBottom: "2px"
-};
-
-const menuDescriptionStyle = {
-  fontSize: "12px",
-  color: "#666",
-  lineHeight: "1.3"
-};
-
-const emergencyContactStyle = {
-  backgroundColor: "#ffeaea",
-  padding: "15px",
-  borderRadius: "8px",
-  border: "1px solid #ffcccc"
-};
-
-const contactItemStyle = {
-  fontSize: "13px",
-  color: "#d32f2f",
-  marginBottom: "5px"
-};
 
 export default Sidebar;

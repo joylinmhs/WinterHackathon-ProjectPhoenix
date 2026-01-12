@@ -128,7 +128,7 @@ function Login({ setLoggedIn }) {
                 onClick={handleBackClick}
                 style={backButtonStyle}
               >
-                ← Back
+                Back ←
               </button>
 
               <h2 style={{ 
