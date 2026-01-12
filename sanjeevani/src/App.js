@@ -1,6 +1,7 @@
 import User from "./User";
 import Admin from "./Admin";
 import Login from "./login";
+import HospitalPortal from "./HospitalPortal";
 import { useState } from "react";
 import { auth } from "./firebase";
 import { signOut } from "firebase/auth";
@@ -8,15 +9,17 @@ import "./App.css";
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(null);
+  const [currentHospitalId, setCurrentHospitalId] = useState(null);
 
   const handleLogout = async () => {
     await signOut(auth);
     setLoggedIn(null);
+    setCurrentHospitalId(null);
   };
 
   // If not logged in, show login page
   if (!loggedIn) {
-    return <Login setLoggedIn={setLoggedIn} />;
+    return <Login setLoggedIn={setLoggedIn} setHospitalId={setCurrentHospitalId} />;
   }
 
   // Route based on user role
@@ -41,6 +44,10 @@ function App() {
         </main>
       </div>
     );
+  }
+
+  if (loggedIn === "hospital") {
+    return <HospitalPortal hospitalId={currentHospitalId} onLogout={handleLogout} />;
   }
 
   // User view (with sidebar)

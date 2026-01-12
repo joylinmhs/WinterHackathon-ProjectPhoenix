@@ -1,31 +1,26 @@
 import { useEffect, useState } from "react";
-import { query, where } from "firebase/firestore";
 import {
   collection,
   onSnapshot,
   addDoc,
   doc,
-  deleteDoc
+  deleteDoc,
+  query,
+  where
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { motion, AnimatePresence } from "framer-motion";
 
 function Admin() {
-  const [activeTab, setActiveTab] = useState("emergencies");
-  const [requests, setRequests] = useState([]);
-  const [ambulances, setAmbulances] = useState([]);
+  const [activeTab, setActiveTab] = useState("bloodbanks");
   const [bloodBanks, setBloodBanks] = useState([]);
   const [donors, setDonors] = useState([]);
   const [hospitals, setHospitals] = useState([]);
 
-  // New ambulance form
-  const [newAmbulance, setNewAmbulance] = useState({
-    name: "", location: "", phone: "", available: true
-  });
-
   // New blood bank form
   const [newBloodBank, setNewBloodBank] = useState({
-    name: "", location: "", phone: "", hours: ""
+    name: "", location: "", phone: "", hours: "",
+    bloodTypes: { "A+": 0, "A-": 0, "B+": 0, "B-": 0, "AB+": 0, "AB-": 0, "O+": 0, "O-": 0 }
   });
 
   // New donor form
@@ -35,29 +30,8 @@ function Admin() {
 
   // New hospital form
   const [newHospital, setNewHospital] = useState({
-    name: "", lat: "", lng: "", icuBeds: "", oxygen: false, doctors: false
+    name: "", lat: "", lng: "", icuBeds: "", oxygen: false, doctors: false, email: "", password: ""
   });
-
-  // Emergency Requests
-  useEffect(() => {
-    const q = query(
-      collection(db, "emergencyRequests"),
-      where("status", "==", "Pending")
-    );
-
-    const unsub = onSnapshot(q, snap => {
-      setRequests(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    });
-    return () => unsub();
-  }, []);
-
-  // Ambulances
-  useEffect(() => {
-    const unsub = onSnapshot(collection(db, "ambulances"), snap => {
-      setAmbulances(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    });
-    return () => unsub();
-  }, []);
 
   // Blood Banks
   useEffect(() => {
@@ -83,23 +57,16 @@ function Admin() {
     return () => unsub();
   }, []);
 
-  // Add new ambulance
-  const addAmbulance = async () => {
-    if (!newAmbulance.name || !newAmbulance.location || !newAmbulance.phone) {
-      return alert("Please fill all fields");
-    }
-    await addDoc(collection(db, "ambulances"), newAmbulance);
-    setNewAmbulance({ name: "", location: "", phone: "", available: true });
-    alert("Ambulance added successfully");
-  };
-
   // Add new blood bank
   const addBloodBank = async () => {
     if (!newBloodBank.name || !newBloodBank.location || !newBloodBank.phone) {
       return alert("Please fill all fields");
     }
     await addDoc(collection(db, "bloodBanks"), newBloodBank);
-    setNewBloodBank({ name: "", location: "", phone: "", hours: "" });
+    setNewBloodBank({
+      name: "", location: "", phone: "", hours: "",
+      bloodTypes: { "A+": 0, "A-": 0, "B+": 0, "B-": 0, "AB+": 0, "AB-": 0, "O+": 0, "O-": 0 }
+    });
     alert("Blood bank added successfully");
   };
 
@@ -124,15 +91,8 @@ function Admin() {
       lng: parseFloat(newHospital.lng),
       icuBeds: parseInt(newHospital.icuBeds) || 0
     });
-    setNewHospital({ name: "", lat: "", lng: "", icuBeds: "", oxygen: false, doctors: false });
+    setNewHospital({ name: "", lat: "", lng: "", icuBeds: "", oxygen: false, doctors: false, email: "", password: "" });
     alert("Hospital added successfully");
-  };
-
-  // Delete functions
-  const deleteAmbulance = async (id) => {
-    if (window.confirm("Delete this ambulance?")) {
-      await deleteDoc(doc(db, "ambulances", id));
-    }
   };
 
   const deleteBloodBank = async (id) => {
@@ -154,9 +114,7 @@ function Admin() {
   };
 
   const tabs = [
-    { id: "emergencies", label: "Emergency Requests", icon: "🚨", color: "red" },
-    { id: "ambulances", label: "Manage Ambulances", icon: "🚑", color: "blue" },
-    { id: "bloodbanks", label: "Manage Blood Banks", icon: "🩸", color: "green" },
+    { id: "bloodbanks", label: "Manage Blood Banks", icon: "🩸", color: "red" }, // changed color to red for consistency
     { id: "donors", label: "Manage Donors", icon: "💉", color: "orange" },
     { id: "hospitals", label: "Manage Hospitals", icon: "🏥", color: "purple" }
   ];
@@ -204,145 +162,6 @@ function Admin() {
         {/* Content Area */}
         <div className="bg-slate-800/50 rounded-2xl shadow-2xl p-6 border border-slate-700 backdrop-blur-sm min-h-[600px]">
           <AnimatePresence mode="wait">
-            {/* Emergency Requests Tab */}
-            {activeTab === "emergencies" && (
-              <motion.div
-                key="emergencies"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <h2 className="text-2xl font-bold text-red-400 mb-6 flex items-center gap-2">
-                  <span className="text-3xl">🚨</span> Emergency Requests
-                </h2>
-                {requests.length === 0 ? (
-                  <div className="text-center py-20 bg-slate-800/50 rounded-xl border border-dashed border-slate-700">
-                    <div className="text-6xl mb-4 text-emerald-500/20">✅</div>
-                    <p className="text-slate-500 text-xl font-light">All clear. No pending emergencies.</p>
-                  </div>
-                ) : (
-                  <div className="grid gap-4">
-                    {requests.map(req => (
-                      <div key={req.id} className="bg-gradient-to-r from-red-900/20 to-orange-900/10 border-l-4 border-red-500 p-6 rounded-xl shadow-lg flex justify-between items-center group hover:bg-red-900/30 transition-colors">
-                        <div>
-                          <div className="flex items-center gap-2 mb-2">
-                            {req.hospitalId ? <span className="text-xs bg-red-500/20 text-red-300 px-2 py-0.5 rounded border border-red-500/30">HOSPITAL REQUEST</span> : <span className="text-xs bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded border border-orange-500/30">AMBULANCE REQUEST</span>}
-                            <span className="text-xs text-slate-500 font-mono">ID: {req.id.slice(0, 8)}...</span>
-                          </div>
-                          <h3 className="text-xl font-bold text-red-200 mb-1">Emergency Assistance Required</h3>
-                          <p className="text-slate-400 flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                            Status: <span className="text-red-300 font-bold tracking-wide">{req.status.toUpperCase()}</span>
-                          </p>
-                        </div>
-                        <a
-                          href={`https://www.google.com/maps?q=${req.lat},${req.lng}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white rounded-lg font-bold shadow-lg shadow-red-600/20 transition-all transform hover:-translate-y-1 flex items-center gap-2"
-                        >
-                          📍 LOCATE
-                        </a>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </motion.div>
-            )}
-
-            {/* Ambulances Tab */}
-            {activeTab === "ambulances" && (
-              <motion.div
-                key="ambulances"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-              >
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-blue-400 flex items-center gap-2">
-                    <span className="text-3xl">🚑</span> Manage Ambulances
-                  </h2>
-                </div>
-
-                {/* Add New Ambulance Form */}
-                <div className="bg-slate-800 p-6 rounded-xl mb-8 border border-slate-700 shadow-inner">
-                  <h3 className="text-lg font-semibold text-blue-300 mb-4 border-b border-slate-700 pb-2">Add New Unit</h3>
-                  <div className="grid md:grid-cols-2 gap-4 mb-4">
-                    <input
-                      type="text"
-                      placeholder="Ambulance Name (e.g., Unit-101)"
-                      value={newAmbulance.name}
-                      onChange={e => setNewAmbulance({ ...newAmbulance, name: e.target.value })}
-                      className="px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Current Location"
-                      value={newAmbulance.location}
-                      onChange={e => setNewAmbulance({ ...newAmbulance, location: e.target.value })}
-                      className="px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    />
-                  </div>
-                  <div className="grid md:grid-cols-2 gap-4 mb-4">
-                    <input
-                      type="tel"
-                      placeholder="Phone Number"
-                      value={newAmbulance.phone}
-                      onChange={e => setNewAmbulance({ ...newAmbulance, phone: e.target.value })}
-                      className="px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    />
-                    <div className="flex items-center bg-slate-900 px-4 rounded-lg border border-slate-700">
-                      <input
-                        type="checkbox"
-                        id="available"
-                        checked={newAmbulance.available}
-                        onChange={e => setNewAmbulance({ ...newAmbulance, available: e.target.checked })}
-                        className="w-5 h-5 text-blue-600 bg-slate-800 border-slate-600 rounded focus:ring-blue-500"
-                      />
-                      <label htmlFor="available" className="ml-3 text-slate-300 font-medium">Mark as Available</label>
-                    </div>
-                  </div>
-                  <button
-                    onClick={addAmbulance}
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg shadow-blue-600/20"
-                  >
-                    ➕ Register Ambulance
-                  </button>
-                </div>
-
-                {/* List of Ambulances */}
-                <h3 className="text-xl font-semibold text-slate-300 mb-4">Fleet Status</h3>
-                {ambulances.length === 0 ? (
-                  <div className="text-center py-12 bg-slate-800 rounded-xl border border-slate-700">
-                    <p className="text-slate-500">No ambulances registered yet</p>
-                  </div>
-                ) : (
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {ambulances.map(amb => (
-                      <div key={amb.id} className="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md hover:border-blue-500/50 transition-all group">
-                        <div className="flex justify-between items-start mb-3">
-                          <h4 className="text-lg font-bold text-white max-w-[70%] truncate">{amb.name}</h4>
-                          <span className={`px-2 py-0.5 rounded text-xs font-bold border ${amb.available ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
-                            {amb.available ? 'AVAILABLE' : 'BUSY'}
-                          </span>
-                        </div>
-                        <div className="space-y-2 text-sm text-slate-400 mb-4">
-                          <p className="flex items-center gap-2"><span className="opacity-50">📍</span> {amb.location}</p>
-                          <p className="flex items-center gap-2"><span className="opacity-50">📞</span> {amb.phone}</p>
-                        </div>
-                        <button
-                          onClick={() => deleteAmbulance(amb.id)}
-                          className="w-full py-2 bg-slate-700 hover:bg-red-900/50 text-slate-300 hover:text-red-400 rounded-lg text-sm font-medium transition-colors border border-slate-600 hover:border-red-900"
-                        >
-                          Delete Unit
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </motion.div>
-            )}
 
             {/* Blood Banks Tab */}
             {activeTab === "bloodbanks" && (
@@ -352,32 +171,56 @@ function Admin() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
               >
-                <h2 className="text-2xl font-bold text-emerald-400 mb-6 flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-red-400 mb-6 flex items-center gap-2">
                   <span className="text-3xl">🩸</span> Manage Blood Banks
                 </h2>
 
                 <div className="bg-slate-800 p-6 rounded-xl mb-8 border border-slate-700 shadow-inner">
-                  <h3 className="text-lg font-semibold text-emerald-300 mb-4 border-b border-slate-700 pb-2">Add New Bank</h3>
+                  <h3 className="text-lg font-semibold text-red-300 mb-4 border-b border-slate-700 pb-2">Add New Bank</h3>
                   <div className="grid md:grid-cols-2 gap-4 mb-4">
-                    <input type="text" placeholder="Blood Bank Name" value={newBloodBank.name} onChange={e => setNewBloodBank({ ...newBloodBank, name: e.target.value })} className="px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 outline-none" />
-                    <input type="text" placeholder="Location" value={newBloodBank.location} onChange={e => setNewBloodBank({ ...newBloodBank, location: e.target.value })} className="px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 outline-none" />
+                    <input type="text" placeholder="Blood Bank Name" value={newBloodBank.name} onChange={e => setNewBloodBank({ ...newBloodBank, name: e.target.value })} className="px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-red-500 outline-none" />
+                    <input type="text" placeholder="Location" value={newBloodBank.location} onChange={e => setNewBloodBank({ ...newBloodBank, location: e.target.value })} className="px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-red-500 outline-none" />
                   </div>
                   <div className="grid md:grid-cols-2 gap-4 mb-4">
-                    <input type="tel" placeholder="Phone Number" value={newBloodBank.phone} onChange={e => setNewBloodBank({ ...newBloodBank, phone: e.target.value })} className="px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 outline-none" />
-                    <input type="text" placeholder="Operating Hours (e.g. 24/7)" value={newBloodBank.hours} onChange={e => setNewBloodBank({ ...newBloodBank, hours: e.target.value })} className="px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 outline-none" />
+                    <input type="tel" placeholder="Phone Number" value={newBloodBank.phone} onChange={e => setNewBloodBank({ ...newBloodBank, phone: e.target.value })} className="px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-red-500 outline-none" />
+                    <input type="text" placeholder="Operating Hours (e.g. 24/7)" value={newBloodBank.hours} onChange={e => setNewBloodBank({ ...newBloodBank, hours: e.target.value })} className="px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-red-500 outline-none" />
                   </div>
-                  <button onClick={addBloodBank} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg shadow-emerald-600/20">➕ Add Blood Bank</button>
+
+                  {/* Blood Types Inventory Inputs */}
+                  <h4 className="text-sm font-semibold text-slate-400 mb-2">Available Units</h4>
+                  <div className="grid grid-cols-4 gap-3 mb-6">
+                    {Object.keys(newBloodBank.bloodTypes).map((type) => (
+                      <div key={type} className="flex flex-col">
+                        <label className="text-xs text-slate-500 mb-1">{type}</label>
+                        <input
+                          type="number"
+                          value={newBloodBank.bloodTypes[type]}
+                          onChange={(e) => setNewBloodBank({ ...newBloodBank, bloodTypes: { ...newBloodBank.bloodTypes, [type]: parseInt(e.target.value) || 0 } })}
+                          className="px-2 py-2 bg-slate-900 border border-slate-700 rounded text-white text-center focus:ring-1 focus:ring-red-500 outline-none"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <button onClick={addBloodBank} className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg shadow-red-600/20">➕ Add Blood Bank</button>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
                   {bloodBanks.map(bb => (
-                    <div key={bb.id} className="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md flex justify-between items-start hover:border-emerald-500/50 transition-colors">
+                    <div key={bb.id} className="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow-md flex justify-between items-start hover:border-red-500/50 transition-colors">
                       <div className="flex-1">
                         <h4 className="text-lg font-bold text-white mb-2">{bb.name}</h4>
                         <div className="space-y-1 text-sm text-slate-400">
                           <p>📍 {bb.location}</p>
                           <p>📞 {bb.phone}</p>
                           <p>🕒 {bb.hours}</p>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {bb.bloodTypes && Object.entries(bb.bloodTypes).filter(([_, qty]) => qty > 0).map(([type, qty]) => (
+                            <span key={type} className="text-xs bg-red-900/30 text-red-300 px-1.5 py-0.5 rounded border border-red-900/50">
+                              {type}: {qty}
+                            </span>
+                          ))}
                         </div>
                       </div>
                       <button onClick={() => deleteBloodBank(bb.id)} className="text-slate-500 hover:text-red-400 p-2 hover:bg-slate-700 rounded bg-slate-900/50">🗑️</button>
@@ -447,7 +290,11 @@ function Admin() {
 
                 <div className="bg-slate-800 p-6 rounded-xl mb-8 border border-slate-700 shadow-inner">
                   <h3 className="text-lg font-semibold text-purple-300 mb-4 border-b border-slate-700 pb-2">Add New Facility</h3>
-                  <input type="text" placeholder="Hospital Name" value={newHospital.name} onChange={e => setNewHospital({ ...newHospital, name: e.target.value })} className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500 outline-none mb-4" />
+                  <div className="flex gap-4 mb-4">
+                    <input type="text" placeholder="Hospital Name" value={newHospital.name} onChange={e => setNewHospital({ ...newHospital, name: e.target.value })} className="flex-[2] px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500 outline-none" />
+                    <input type="email" placeholder="Login Email" value={newHospital.email} onChange={e => setNewHospital({ ...newHospital, email: e.target.value })} className="flex-1 px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500 outline-none" />
+                    <input type="text" placeholder="Password" value={newHospital.password} onChange={e => setNewHospital({ ...newHospital, password: e.target.value })} className="flex-1 px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500 outline-none" />
+                  </div>
                   <div className="grid md:grid-cols-3 gap-4 mb-4">
                     <input type="number" step="any" placeholder="Latitude" value={newHospital.lat} onChange={e => setNewHospital({ ...newHospital, lat: e.target.value })} className="px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500 outline-none" />
                     <input type="number" step="any" placeholder="Longitude" value={newHospital.lng} onChange={e => setNewHospital({ ...newHospital, lng: e.target.value })} className="px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-purple-500 outline-none" />
@@ -471,6 +318,9 @@ function Admin() {
                     <div key={hosp.id} className="bg-slate-800 border border-slate-700 p-6 rounded-xl shadow-md hover:border-purple-500/50 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                       <div>
                         <h4 className="text-xl font-bold text-white mb-2">{hosp.name}</h4>
+                        <div className="mb-2 text-sm text-slate-500">
+                          📧 {hosp.email} | 🔑 {hosp.password}
+                        </div>
                         <div className="flex flex-wrap gap-4 text-sm text-slate-400">
                           <span className="bg-slate-900 px-2 py-1 rounded border border-slate-700">📍 {hosp.lat}, {hosp.lng}</span>
                           <span className="bg-slate-900 px-2 py-1 rounded border border-slate-700">🛏️ ICU: {hosp.icuBeds}</span>

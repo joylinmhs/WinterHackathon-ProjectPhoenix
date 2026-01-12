@@ -74,6 +74,10 @@ function AmbulanceAvailability() {
           <AnimatePresence>
             {ambulances.map((ambulance, index) => {
               const dist = userLocation ? distance(userLocation.lat, userLocation.lng, ambulance.lat, ambulance.lng) : 0;
+              // Use Remote schema fields: vehicleNumber, driverName, isAvailable, but fallback to HEAD: name, available
+              const name = ambulance.name || `Vehicle ${ambulance.vehicleNumber}`;
+              const available = ambulance.available !== undefined ? ambulance.available : ambulance.isAvailable;
+              const phone = ambulance.phone;
 
               return (
                 <motion.div
@@ -89,27 +93,31 @@ function AmbulanceAvailability() {
 
                   <div className="flex justify-between items-start mb-4 relative z-10">
                     <div>
-                      <h3 className="text-xl font-bold text-white mb-1">{ambulance.name}</h3>
-                      <div className="flex items-center gap-1 text-sm text-slate-400">
-                        <span>📍</span>
-                        <span className="truncate max-w-[150px]">{ambulance.location}</span>
-                      </div>
+                      <h3 className="text-xl font-bold text-white mb-1">{name}</h3>
+                      {ambulance.driverName && <p className="text-sm text-slate-500">Driver: {ambulance.driverName}</p>}
+                      {ambulance.vehicleNumber && <p className="text-sm text-slate-500 text-xs font-mono">{ambulance.vehicleNumber}</p>}
+                      {!ambulance.vehicleNumber && !ambulance.driverName && (
+                        <div className="flex items-center gap-1 text-sm text-slate-400">
+                          <span>📍</span>
+                          <span className="truncate max-w-[150px]">{ambulance.location || "Unknown Location"}</span>
+                        </div>
+                      )}
                     </div>
-                    <div className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-2 ${ambulance.available
-                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                        : "bg-red-500/10 text-red-400 border-red-500/20"
+                    <div className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-2 ${available
+                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                      : "bg-red-500/10 text-red-400 border-red-500/20"
                       }`}>
-                      <span className={`w-2 h-2 rounded-full ${ambulance.available ? 'bg-emerald-400' : 'bg-red-400'}`} />
-                      {ambulance.available ? "AVAILABLE" : "BUSY"}
+                      <span className={`w-2 h-2 rounded-full ${available ? 'bg-emerald-400' : 'bg-red-400'}`} />
+                      {available ? "AVAILABLE" : "BUSY"}
                     </div>
                   </div>
 
                   <div className="bg-slate-900/50 rounded-xl p-4 mb-6 border border-slate-700/50 relative z-10">
                     <p className="text-slate-300 flex items-center gap-3 mb-2">
                       <span className="bg-slate-800 p-1.5 rounded-lg text-blue-400">📞</span>
-                      {ambulance.phone}
+                      {phone}
                     </p>
-                    {userLocation && (
+                    {userLocation && (ambulance.lat || ambulance.lng) && (
                       <p className="text-slate-300 flex items-center gap-3">
                         <span className="bg-slate-800 p-1.5 rounded-lg text-purple-400">📏</span>
                         <span>{dist.toFixed(2)} km away</span>
@@ -119,14 +127,14 @@ function AmbulanceAvailability() {
 
                   <button
                     onClick={() => requestAmbulance(ambulance)}
-                    disabled={!ambulance.available}
+                    disabled={!available}
                     className={`w-full py-3 rounded-xl font-bold shadow-lg transition-all duration-300 flex items-center justify-center gap-2 relative z-10 overflow-hidden
-                      ${ambulance.available
+                      ${available
                         ? "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/20 hover:shadow-blue-600/40"
                         : "bg-slate-700 text-slate-500 cursor-not-allowed"
                       }`}
                   >
-                    {ambulance.available ? (
+                    {available ? (
                       <>
                         <span className="text-lg">🚑</span> Request Now
                       </>
