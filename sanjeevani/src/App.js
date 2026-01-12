@@ -1,52 +1,132 @@
 import User from "./User";
 import Admin from "./Admin";
-import { useState } from "react";
+import Login from "./login";
+import { useState, useEffect } from "react";
+import { auth } from "./firebase";
+import { signOut } from "firebase/auth";
 
 function App() {
-  const [page, setPage] = useState("user");
+  const [loggedIn, setLoggedIn] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  return (
-    <div style={{ padding: "20px", fontFamily: "Arial" }}>
-      <h1 style={{ textAlign: "center", color: "#2c3e50" }}>
-        🏥 Sanjeevani – Smart Emergency Hospital Finder
-      </h1>
+  const handleLogout = async () => {
+    await signOut(auth);
+    setLoggedIn(null);
+  };
 
-      <div style={{ textAlign: "center", marginBottom: "20px" }}>
-        <button
-          onClick={() => setPage("user")}
-          style={{
-            padding: "10px 20px",
-            marginRight: "10px",
-            backgroundColor: page === "user" ? "#27ae60" : "#bdc3c7",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer"
-          }}
-        >
-          User View
-        </button>
-
-        <button
-          onClick={() => setPage("admin")}
-          style={{
-            padding: "10px 20px",
-            backgroundColor: page === "admin" ? "#2980b9" : "#bdc3c7",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer"
-          }}
-        >
-          Admin View
-        </button>
+  // Show loading state
+  if (loading) {
+    return (
+      <div style={loadingScreenStyle}>
+        <div style={{ textAlign: "center" }}>
+          <h2>🏥 Sanjeevani</h2>
+          <p>Loading...</p>
+        </div>
       </div>
+    );
+  }
 
-      <hr />
+  // If not logged in, show login page
+  if (!loggedIn) {
+    return <Login setLoggedIn={setLoggedIn} />;
+  }
 
-      {page === "user" ? <User /> : <Admin />}
+  // Route based on user role
+  if (loggedIn === "admin") {
+    return (
+      <div style={{ minHeight: "100vh", backgroundColor: "#f8f9fa" }}>
+        <div style={headerStyle}>
+          <div style={headerContentStyle}>
+            <h1 style={{ textAlign: "left", color: "#d32f2f", fontSize: "24px", margin: 0 }}>
+              🏥 Sanjeevani – Hospital Admin Dashboard
+            </h1>
+            <button
+              onClick={handleLogout}
+              style={{
+                ...navButtonStyle,
+                backgroundColor: "#f5f5f5",
+                color: "#666",
+                fontWeight: "600"
+              }}
+            >
+              🚪 Logout
+            </button>
+          </div>
+        </div>
+        <div style={mainContentStyle}>
+          <Admin />
+        </div>
+      </div>
+    );
+  }
+
+  // User view
+  return (
+    <div style={{ minHeight: "100vh", backgroundColor: "#f8f9fa" }}>
+      <div style={headerStyle}>
+        <div style={headerContentStyle}>
+          <h1 style={{ textAlign: "left", color: "#1976d2", fontSize: "24px", margin: 0 }}>
+            🏥 Sanjeevani – Emergency Hospital Finder
+          </h1>
+          <button
+            onClick={handleLogout}
+            style={{
+              ...navButtonStyle,
+              backgroundColor: "#f5f5f5",
+              color: "#666",
+              fontWeight: "600"
+            }}
+          >
+            🚪 Logout
+          </button>
+        </div>
+      </div>
+      <div style={mainContentStyle}>
+        <User />
+      </div>
     </div>
   );
 }
+
+const loadingScreenStyle = {
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  height: "100vh",
+  backgroundColor: "#f8f9fa",
+  fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+};
+
+const headerStyle = {
+  backgroundColor: "#ffffff",
+  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+  padding: "20px 0",
+  borderBottom: "3px solid #1976d2"
+};
+
+const headerContentStyle = {
+  maxWidth: "1200px",
+  margin: "0 auto",
+  padding: "0 20px",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center"
+};
+
+const navButtonStyle = {
+  padding: "10px 18px",
+  border: "none",
+  borderRadius: "6px",
+  cursor: "pointer",
+  fontSize: "14px",
+  transition: "all 0.3s ease",
+  outline: "none"
+};
+
+const mainContentStyle = {
+  maxWidth: "1200px",
+  margin: "0 auto",
+  padding: "30px 20px"
+};
 
 export default App;
