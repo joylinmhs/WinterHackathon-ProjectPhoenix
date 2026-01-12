@@ -1,57 +1,83 @@
 import { useEffect, useState } from "react";
-import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  onSnapshot,
+  updateDoc,
+  doc,
+  addDoc,
+  serverTimestamp
+} from "firebase/firestore";
 import { db } from "./firebase";
 
 function Admin() {
   const [requests, setRequests] = useState([]);
+  const [tips, setTips] = useState({});
 
+  // 🔴 READ EMERGENCY REQUESTS LIVE
   useEffect(() => {
-    async function fetchRequests() {
-      const snapshot = await getDocs(collection(db, "emergencyRequests"));
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setRequests(data);
-    }
-    fetchRequests();
+    const unsub = onSnapshot(collection(db, "emergencyRequests"), (snap) => {
+      setRequests(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    return () => unsub();
   }, []);
 
-  const acknowledgeRequest = async (id) => {
-    await updateDoc(doc(db, "emergencyRequests", id), {
-      status: "Hospital Prepared"
+  // 🩺 SEND FIRST-AID TIP
+  const sendTip = async (req) => {
+    const message = tips[req.id];
+    if (!message) return alert("Enter first-aid tip");
+
+    await addDoc(collection(db, "firstAidTips"), {
+      emergencyId: req.id,
+      hospitalId: req.hospitalId,
+      message,
+      timestamp: serverTimestamp()
     });
-    alert("Patient acknowledged and prepared!");
+
+    await updateDoc(doc(db, "emergencyRequests", req.id), {
+      status: "Hospital Responded"
+    });
+
+    setTips({ ...tips, [req.id]: "" });
+    alert("First-aid tip sent");
   };
 
   return (
     <div>
       <h2>🏥 Hospital Admin Dashboard</h2>
 
-      {requests.length === 0 && <p>No emergency requests yet</p>}
+      {requests.length === 0 && <p>No emergencies yet</p>}
 
       {requests.map(req => (
-        <div
-          key={req.id}
-          style={{
-            border: "1px solid #ccc",
-            padding: "15px",
-            marginBottom: "10px",
-            borderRadius: "8px"
-          }}
-        >
-          <p><strong>Emergency:</strong> {req.emergencyType}</p>
-          <p><strong>Status:</strong> {req.status}</p>
-          <p><strong>Patient Location:</strong> {req.lat}, {req.lng}</p>
+        <div key={req.id} style={{
+          border: "1px solid #ccc",
+          padding: 12,
+          marginBottom: 10,
+          borderRadius: 6
+        }}>
+          <p><b>Emergency:</b> {req.emergencyType}</p>
+          <p><b>Status:</b> {req.status}</p>
+
+          <textarea
+            placeholder="Enter first-aid instruction..."
+            value={tips[req.id] || ""}
+            onChange={e =>
+              setTips({ ...tips, [req.id]: e.target.value })
+            }
+            style={{ width: "100%" }}
+          />
 
           <button
-            onClick={() => acknowledgeRequest(req.id)}
+            onClick={() => sendTip(req)}
             style={{
-              padding: "8px",
+              marginTop: 6,
+              padding: 8,
               backgroundColor: "#27ae60",
               color: "white",
               border: "none",
-              borderRadius: "5px"
+              borderRadius: 5
             }}
           >
-            ✅ Acknowledge & Prepare
+            📤 Send Tip
           </button>
         </div>
       ))}
