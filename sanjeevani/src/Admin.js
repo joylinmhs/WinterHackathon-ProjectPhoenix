@@ -1,34 +1,60 @@
-import { doc, updateDoc } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
 import { db } from "./firebase";
-import { useState } from "react";
 
 function Admin() {
-  const [id, setId] = useState("");
-  const [icu, setIcu] = useState("");
-  const [oxygen, setOxygen] = useState(false);
-  const [doctors, setDoctors] = useState(false);
+  const [requests, setRequests] = useState([]);
 
-  const updateHospital = async () => {
-    await updateDoc(doc(db, "hospitals", id), {
-      icuBeds: Number(icu),
-      oxygen: oxygen,
-      doctors: doctors
+  useEffect(() => {
+    async function fetchRequests() {
+      const snapshot = await getDocs(collection(db, "emergencyRequests"));
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setRequests(data);
+    }
+    fetchRequests();
+  }, []);
+
+  const acknowledgeRequest = async (id) => {
+    await updateDoc(doc(db, "emergencyRequests", id), {
+      status: "Hospital Prepared"
     });
-    alert("Hospital data updated successfully!");
+    alert("Patient acknowledged and prepared!");
   };
 
   return (
     <div>
-      <h2>Hospital Admin Panel</h2>
-      <input placeholder="Hospital Document ID" onChange={e => setId(e.target.value)} />
-      <input placeholder="ICU Beds" onChange={e => setIcu(e.target.value)} />
-      <label>
-        <input type="checkbox" onChange={e => setOxygen(e.target.checked)} /> Oxygen Available
-      </label>
-      <label>
-        <input type="checkbox" onChange={e => setDoctors(e.target.checked)} /> Doctors Available
-      </label>
-      <button onClick={updateHospital}>Update Hospital</button>
+      <h2>🏥 Hospital Admin Dashboard</h2>
+
+      {requests.length === 0 && <p>No emergency requests yet</p>}
+
+      {requests.map(req => (
+        <div
+          key={req.id}
+          style={{
+            border: "1px solid #ccc",
+            padding: "15px",
+            marginBottom: "10px",
+            borderRadius: "8px"
+          }}
+        >
+          <p><strong>Emergency:</strong> {req.emergencyType}</p>
+          <p><strong>Status:</strong> {req.status}</p>
+          <p><strong>Patient Location:</strong> {req.lat}, {req.lng}</p>
+
+          <button
+            onClick={() => acknowledgeRequest(req.id)}
+            style={{
+              padding: "8px",
+              backgroundColor: "#27ae60",
+              color: "white",
+              border: "none",
+              borderRadius: "5px"
+            }}
+          >
+            ✅ Acknowledge & Prepare
+          </button>
+        </div>
+      ))}
     </div>
   );
 }
