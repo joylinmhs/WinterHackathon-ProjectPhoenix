@@ -1,3 +1,4 @@
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "./firebase";   // adjust path if needed
@@ -6,6 +7,21 @@ function User() {
   const [hospitals, setHospitals] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
   const [bestHospital, setBestHospital] = useState(null);
+  const notifyHospital = async () => {
+  if (!bestHospital || !userLocation) return;
+
+  await addDoc(collection(db, "emergencyRequests"), {
+    patientName: "Demo Patient",
+    emergencyType: "Accident",
+    hospitalId: bestHospital.id,
+    lat: userLocation.lat,
+    lng: userLocation.lng,
+    status: "Pending",
+    timestamp: serverTimestamp()
+  });
+
+  alert("🚑 Hospital notified successfully!");
+};
 
   // 📍 Get patient current location
   useEffect(() => {
@@ -92,18 +108,19 @@ function User() {
           <p><strong>Doctors:</strong> {bestHospital.doctors ? "Available" : "No"}</p>
           <p><strong>Blood Bank:</strong> {bestHospital.bloodBank ? "Available" : "No"}</p>
 
-          <button
-            style={{
-              marginTop: "10px",
-              padding: "10px",
-              backgroundColor: "#e74c3c",
-              color: "white",
-              border: "none",
-              borderRadius: "5px"
-            }}
-          >
-            🚨 Notify Hospital
-          </button>
+         <button
+  onClick={notifyHospital}
+  style={{
+    marginTop: "10px",
+    padding: "10px",
+    backgroundColor: "#e74c3c",
+    color: "white",
+    border: "none",
+    borderRadius: "5px"
+  }}
+>
+  🚨 Notify Hospital
+</button>
         </div>
       )}
 
