@@ -1,8 +1,12 @@
 import { useState } from "react";
+import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
+import { db } from "./firebase";
 
-function Login({ setLoggedIn }) {
-  const [step, setStep] = useState("roleSelection"); // roleSelection, adminPassword
+function Login({ setLoggedIn, setHospitalId }) {
+  const [step, setStep] = useState("roleSelection"); // roleSelection, adminPassword, hospitalLogin
+  const [isRegistering, setIsRegistering] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
+  const [hospitalAuth, setHospitalAuth] = useState({ email: "", password: "", name: "", lat: "", lng: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -33,10 +37,71 @@ function Login({ setLoggedIn }) {
     }, 500);
   };
 
+  const handleHospitalLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const q = query(
+        collection(db, "hospitals"),
+        where("email", "==", hospitalAuth.email),
+        where("password", "==", hospitalAuth.password)
+      );
+      const snapshot = await getDocs(q);
+
+      if (!snapshot.empty) {
+        const hospitalDoc = snapshot.docs[0];
+        setHospitalId(hospitalDoc.id);
+        setLoggedIn("hospital");
+      } else {
+        setError("Invalid email or password.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Login failed. Check connection.");
+    }
+    setLoading(false);
+  };
+
+  const handleHospitalRegister = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    if (!hospitalAuth.name || !hospitalAuth.email || !hospitalAuth.password || !hospitalAuth.lat || !hospitalAuth.lng) {
+      setError("Please fill all fields");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const docRef = await addDoc(collection(db, "hospitals"), {
+        name: hospitalAuth.name,
+        email: hospitalAuth.email,
+        password: hospitalAuth.password,
+        lat: parseFloat(hospitalAuth.lat),
+        lng: parseFloat(hospitalAuth.lng),
+        icuBeds: 0,
+        oxygen: false,
+        doctors: false,
+        createdAt: new Date()
+      });
+      setHospitalId(docRef.id);
+      setLoggedIn("hospital");
+    } catch (err) {
+      console.error(err);
+      setError("Registration failed. Please try again.");
+    }
+    setLoading(false);
+  };
+
   const handleBackClick = () => {
     setStep("roleSelection");
     setAdminPassword("");
+    setHospitalAuth({ email: "", password: "", name: "", lat: "", lng: "" });
     setError("");
+    setIsRegistering(false);
   };
 
   return (
@@ -45,24 +110,24 @@ function Login({ setLoggedIn }) {
       <div style={leftPanelStyle}>
         <div style={brandingStyle}>
           <h1 style={{ fontSize: "48px", margin: "0 0 20px 0" }}>🏥</h1>
-          <h2 style={{ 
-            fontSize: "36px", 
-            margin: "0 0 15px 0", 
+          <h2 style={{
+            fontSize: "36px",
+            margin: "0 0 15px 0",
             fontWeight: "700",
             color: "#ffffff"
           }}>
             Sanjeevani
           </h2>
-          <p style={{ 
-            fontSize: "18px", 
-            margin: "0 0 30px 0", 
+          <p style={{
+            fontSize: "18px",
+            margin: "0 0 30px 0",
             color: "#e0e0e0",
             fontWeight: "300"
           }}>
             Smart Emergency Hospital Finder
           </p>
-          <p style={{ 
-            fontSize: "14px", 
+          <p style={{
+            fontSize: "14px",
             color: "#b0bec5",
             lineHeight: "1.8"
           }}>
@@ -76,18 +141,18 @@ function Login({ setLoggedIn }) {
         <div style={formContainerStyle}>
           {step === "roleSelection" ? (
             <>
-              <h2 style={{ 
-                textAlign: "center", 
-                color: "#1976d2", 
+              <h2 style={{
+                textAlign: "center",
+                color: "#1976d2",
                 marginBottom: "10px",
                 fontSize: "28px",
                 fontWeight: "700"
               }}>
                 Welcome to Sanjeevani
               </h2>
-              <p style={{ 
-                textAlign: "center", 
-                color: "#757575", 
+              <p style={{
+                textAlign: "center",
+                color: "#757575",
                 marginBottom: "40px",
                 fontSize: "14px"
               }}>
@@ -117,10 +182,141 @@ function Login({ setLoggedIn }) {
                     Hospital Admin
                   </div>
                   <div style={{ fontSize: "13px", color: "#666" }}>
-                    Manage emergencies
+                    Create hospitals
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setStep("hospitalLogin")}
+                  style={{
+                    ...roleButtonBase,
+                    borderColor: "#34495e",
+                    boxShadow: "0 4px 12px rgba(44, 62, 80, 0.15)"
+                  }}
+                >
+                  <div style={{ fontSize: "40px", marginBottom: "15px" }}>🏥</div>
+                  <div style={{ fontSize: "18px", fontWeight: "700", marginBottom: "8px" }}>
+                    Hospital Portal
+                  </div>
+                  <div style={{ fontSize: "13px", color: "#666" }}>
+                    Manage requests
                   </div>
                 </button>
               </div>
+            </>
+          ) : step === "hospitalLogin" ? (
+            <>
+              <button
+                onClick={handleBackClick}
+                style={backButtonStyle}
+              >
+                Back &larr;
+              </button>
+
+              <h2 style={{
+                textAlign: "center",
+                color: "#2c3e50",
+                marginBottom: "10px",
+                fontSize: "28px",
+                fontWeight: "700",
+                marginTop: "30px"
+              }}>
+                {isRegistering ? "Hospital Registration" : "Hospital Login"}
+              </h2>
+              <p style={{
+                textAlign: "center",
+                color: "#757575",
+                marginBottom: "35px",
+                fontSize: "14px"
+              }}>
+                {isRegistering ? "Join the network to save lives" : "Enter your hospital credentials"}
+              </p>
+
+              <form onSubmit={isRegistering ? handleHospitalRegister : handleHospitalLogin}>
+                {isRegistering && (
+                  <>
+                    <div style={formGroupStyle}>
+                      <label style={labelStyle}>HOSPITAL NAME</label>
+                      <input
+                        type="text"
+                        value={hospitalAuth.name}
+                        onChange={(e) => setHospitalAuth({ ...hospitalAuth, name: e.target.value })}
+                        placeholder="e.g. City General Hospital"
+                        required
+                        style={inputStyle}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                      <div style={{ flex: 1 }}>
+                        <label style={labelStyle}>LATITUDE</label>
+                        <input
+                          type="number"
+                          step="any"
+                          value={hospitalAuth.lat}
+                          onChange={(e) => setHospitalAuth({ ...hospitalAuth, lat: e.target.value })}
+                          placeholder="e.g. 12.9716"
+                          required
+                          style={inputStyle}
+                        />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={labelStyle}>LONGITUDE</label>
+                        <input
+                          type="number"
+                          step="any"
+                          value={hospitalAuth.lng}
+                          onChange={(e) => setHospitalAuth({ ...hospitalAuth, lng: e.target.value })}
+                          placeholder="e.g. 77.5946"
+                          required
+                          style={inputStyle}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>EMAIL</label>
+                  <input
+                    type="email"
+                    value={hospitalAuth.email}
+                    onChange={(e) => setHospitalAuth({ ...hospitalAuth, email: e.target.value })}
+                    placeholder="hospital@example.com"
+                    required
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>PASSWORD</label>
+                  <div className="password-input-wrapper">
+                    <input
+                      type="password"
+                      value={hospitalAuth.password}
+                      onChange={(e) => setHospitalAuth({ ...hospitalAuth, password: e.target.value })}
+                      placeholder="Enter password"
+                      required
+                      style={inputStyle}
+                    />
+                  </div>
+                </div>
+
+                {error && <div style={errorBoxStyle}>⚠️ {error}</div>}
+
+                <button type="submit" style={{ ...submitButtonStyle, backgroundColor: "#2c3e50" }} disabled={loading}>
+                  {loading ? "Processing..." : (isRegistering ? "Register Hospital" : "Login to Dashboard")}
+                </button>
+              </form>
+
+              <p style={{ marginTop: "20px", textAlign: "center", color: "#666", fontSize: "14px" }}>
+                {isRegistering ? "Already have an account? " : "New Hospital? "}
+                <span
+                  onClick={() => setIsRegistering(!isRegistering)}
+                  style={{ color: "#3498db", cursor: "pointer", fontWeight: "bold", textDecoration: "underline" }}
+                >
+                  {isRegistering ? "Login here" : "Register here"}
+                </span>
+              </p>
             </>
           ) : (
             <>
@@ -131,9 +327,9 @@ function Login({ setLoggedIn }) {
                 Back ←
               </button>
 
-              <h2 style={{ 
-                textAlign: "center", 
-                color: "#d32f2f", 
+              <h2 style={{
+                textAlign: "center",
+                color: "#d32f2f",
                 marginBottom: "10px",
                 fontSize: "28px",
                 fontWeight: "700",
@@ -141,9 +337,9 @@ function Login({ setLoggedIn }) {
               }}>
                 Admin Access
               </h2>
-              <p style={{ 
-                textAlign: "center", 
-                color: "#757575", 
+              <p style={{
+                textAlign: "center",
+                color: "#757575",
                 marginBottom: "35px",
                 fontSize: "14px"
               }}>
@@ -171,8 +367,8 @@ function Login({ setLoggedIn }) {
                   </div>
                 )}
 
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={loading}
                   style={{
                     ...submitButtonStyle,

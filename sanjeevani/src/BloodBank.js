@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "./firebase";
 
 function BloodBank() {
   const [bloodBanks, setBloodBanks] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
-  const [selectedBloodType, setSelectedBloodType] = useState("");
 
   const bloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
@@ -24,29 +23,15 @@ function BloodBank() {
     fetchBloodBanks();
   }, []);
 
-  const distance = (a,b,c,d) => {
+  const distance = (a, b, c, d) => {
     const R = 6371;
-    const dLat = (c-a) * Math.PI/180;
-    const dLon = (d-b) * Math.PI/180;
-    const x = Math.sin(dLat/2)**2 +
-              Math.cos(a*Math.PI/180) *
-              Math.cos(c*Math.PI/180) *
-              Math.sin(dLon/2)**2;
-    return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
-  };
-
-  const requestBlood = async (bloodBank, bloodType) => {
-    if (!userLocation || !bloodType) return alert("Please select blood type and ensure location is available");
-
-    await addDoc(collection(db, "bloodRequests"), {
-      bloodBankId: bloodBank.id,
-      bloodType: bloodType,
-      lat: userLocation.lat,
-      lng: userLocation.lng,
-      status: "Requested",
-      timestamp: serverTimestamp()
-    });
-    alert(`Blood ${bloodType} requested from ${bloodBank.name}!`);
+    const dLat = (c - a) * Math.PI / 180;
+    const dLon = (d - b) * Math.PI / 180;
+    const x = Math.sin(dLat / 2) ** 2 +
+      Math.cos(a * Math.PI / 180) *
+      Math.cos(c * Math.PI / 180) *
+      Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
   };
 
   return (
@@ -54,29 +39,6 @@ function BloodBank() {
       <h2 style={{ color: "#d32f2f", marginBottom: "20px" }}>🩸 Blood Bank Services</h2>
 
       {!userLocation && <p>Getting your location...</p>}
-
-      {/* Blood Type Selector */}
-      <div style={{ marginBottom: "20px" }}>
-        <label style={{ display: "block", marginBottom: "8px", fontWeight: "bold" }}>
-          Select Blood Type:
-        </label>
-        <select
-          value={selectedBloodType}
-          onChange={(e) => setSelectedBloodType(e.target.value)}
-          style={{
-            padding: "10px",
-            borderRadius: "5px",
-            border: "1px solid #ccc",
-            fontSize: "16px",
-            width: "200px"
-          }}
-        >
-          <option value="">Choose blood type</option>
-          {bloodTypes.map(type => (
-            <option key={type} value={type}>{type}</option>
-          ))}
-        </select>
-      </div>
 
       <div style={{ display: "grid", gap: "15px" }}>
         {bloodBanks.map(bloodBank => {
@@ -121,22 +83,6 @@ function BloodBank() {
                   })}
                 </div>
               </div>
-
-              <button
-                onClick={() => requestBlood(bloodBank, selectedBloodType)}
-                disabled={!selectedBloodType}
-                style={{
-                  marginTop: "10px",
-                  padding: "8px 16px",
-                  backgroundColor: selectedBloodType ? "#d32f2f" : "#bdc3c7",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: selectedBloodType ? "pointer" : "not-allowed"
-                }}
-              >
-                {selectedBloodType ? `🩸 Request ${selectedBloodType}` : "Select Blood Type"}
-              </button>
             </div>
           );
         })}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "./firebase";
 
 function AmbulanceAvailability() {
@@ -21,28 +21,15 @@ function AmbulanceAvailability() {
     fetchAmbulances();
   }, []);
 
-  const distance = (a,b,c,d) => {
+  const distance = (a, b, c, d) => {
     const R = 6371;
-    const dLat = (c-a) * Math.PI/180;
-    const dLon = (d-b) * Math.PI/180;
-    const x = Math.sin(dLat/2)**2 +
-              Math.cos(a*Math.PI/180) *
-              Math.cos(c*Math.PI/180) *
-              Math.sin(dLon/2)**2;
-    return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
-  };
-
-  const requestAmbulance = async (ambulance) => {
-    if (!userLocation) return alert("Location not available");
-
-    await addDoc(collection(db, "ambulanceRequests"), {
-      ambulanceId: ambulance.id,
-      lat: userLocation.lat,
-      lng: userLocation.lng,
-      status: "Requested",
-      timestamp: serverTimestamp()
-    });
-    alert("Ambulance requested successfully!");
+    const dLat = (c - a) * Math.PI / 180;
+    const dLon = (d - b) * Math.PI / 180;
+    const x = Math.sin(dLat / 2) ** 2 +
+      Math.cos(a * Math.PI / 180) *
+      Math.cos(c * Math.PI / 180) *
+      Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
   };
 
   return (
@@ -53,8 +40,6 @@ function AmbulanceAvailability() {
 
       <div style={{ display: "grid", gap: "15px" }}>
         {ambulances.map(ambulance => {
-          const dist = userLocation ? distance(userLocation.lat, userLocation.lng, ambulance.lat, ambulance.lng) : 0;
-
           return (
             <div key={ambulance.id} style={{
               border: "1px solid #e0e0e0",
@@ -62,49 +47,31 @@ function AmbulanceAvailability() {
               padding: "15px",
               backgroundColor: "#ffffff"
             }}>
-              <h3 style={{ margin: "0 0 10px 0", color: "#333" }}>{ambulance.name}</h3>
-              <p style={{ margin: "5px 0", color: "#666" }}>📍 {ambulance.location}</p>
+              <h3 style={{ margin: "0 0 5px 0", color: "#333" }}>{ambulance.hospitalName || "Unknown Hospital"}</h3>
+              <p style={{ margin: "5px 0", fontWeight: "bold", color: "#555" }}>🚑 Vehicle: {ambulance.vehicleNumber}</p>
+              <p style={{ margin: "5px 0", color: "#666" }}>👨‍✈️ Driver: {ambulance.driverName}</p>
               <p style={{ margin: "5px 0", color: "#666" }}>📞 {ambulance.phone}</p>
               <p style={{ margin: "5px 0", color: "#666" }}>
-                🚗 Status: <span style={{
-                  color: ambulance.available ? "#27ae60" : "#e74c3c",
+                🚦 Status: <span style={{
+                  color: ambulance.isAvailable ? "#27ae60" : "#e74c3c",
                   fontWeight: "bold"
                 }}>
-                  {ambulance.available ? "Available" : "Busy"}
+                  {ambulance.isAvailable ? "Available" : "Busy"}
                 </span>
               </p>
-              {userLocation && (
-                <p style={{ margin: "5px 0", color: "#666" }}>
-                  📏 Distance: {dist.toFixed(2)} km
-                </p>
-              )}
-
-              <button
-                onClick={() => requestAmbulance(ambulance)}
-                disabled={!ambulance.available}
-                style={{
-                  marginTop: "10px",
-                  padding: "8px 16px",
-                  backgroundColor: ambulance.available ? "#27ae60" : "#bdc3c7",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "5px",
-                  cursor: ambulance.available ? "pointer" : "not-allowed"
-                }}
-              >
-                {ambulance.available ? "🚑 Request Ambulance" : "Not Available"}
-              </button>
-            </div>
+            </div >
           );
         })}
-      </div>
+      </div >
 
-      {ambulances.length === 0 && (
-        <p style={{ textAlign: "center", color: "#666", marginTop: "20px" }}>
-          No ambulances available at the moment.
-        </p>
-      )}
-    </div>
+      {
+        ambulances.length === 0 && (
+          <p style={{ textAlign: "center", color: "#666", marginTop: "20px" }}>
+            No ambulances available at the moment.
+          </p>
+        )
+      }
+    </div >
   );
 }
 

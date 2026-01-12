@@ -11,21 +11,20 @@ import {
 import { db } from "./firebase";
 
 function Admin() {
-  const [activeTab, setActiveTab] = useState("emergencies");
-  const [requests, setRequests] = useState([]);
-  const [ambulances, setAmbulances] = useState([]);
+  const [activeTab, setActiveTab] = useState("hospitals");
+  // const [requests, setRequests] = useState([]); // Removed
+  // const [ambulances, setAmbulances] = useState([]); // Moved to HospitalPortal
   const [bloodBanks, setBloodBanks] = useState([]);
   const [donors, setDonors] = useState([]);
   const [hospitals, setHospitals] = useState([]);
 
-  // New ambulance form
-  const [newAmbulance, setNewAmbulance] = useState({
-    name: "", location: "", phone: "", available: true
-  });
+  // New ambulance form - REMOVED
+  // const [newAmbulance, setNewAmbulance] = useState({ name: "", location: "", phone: "", available: true });
 
   // New blood bank form
   const [newBloodBank, setNewBloodBank] = useState({
-    name: "", location: "", phone: "", hours: ""
+    name: "", location: "", phone: "", hours: "",
+    bloodTypes: { "A+": 0, "A-": 0, "B+": 0, "B-": 0, "AB+": 0, "AB-": 0, "O+": 0, "O-": 0 }
   });
 
   // New donor form
@@ -38,26 +37,21 @@ function Admin() {
     name: "", lat: "", lng: "", icuBeds: "", oxygen: false, doctors: false
   });
 
-  // Emergency Requests
-  useEffect(() => {
-    const q = query(
-      collection(db, "emergencyRequests"),
-      where("status", "==", "Pending")
-    );
-
-    const unsub = onSnapshot(q, snap => {
-      setRequests(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    });
-    return () => unsub();
-  }, []);
+  // Emergency Requests - REMOVED
+  /*
+  useEffect(() => { ... }, []);
+  */
 
   // Ambulances
+  // Ambulances - REMOVED (Moved to Hospital Portal)
+  /*
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "ambulances"), snap => {
       setAmbulances(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
     return () => unsub();
   }, []);
+  */
 
   // Blood Banks
   useEffect(() => {
@@ -83,15 +77,10 @@ function Admin() {
     return () => unsub();
   }, []);
 
-  // Add new ambulance
-  const addAmbulance = async () => {
-    if (!newAmbulance.name || !newAmbulance.location || !newAmbulance.phone) {
-      return alert("Please fill all fields");
-    }
-    await addDoc(collection(db, "ambulances"), newAmbulance);
-    setNewAmbulance({ name: "", location: "", phone: "", available: true });
-    alert("Ambulance added successfully");
-  };
+  // Add new ambulance - REMOVED
+  /*
+  const addAmbulance = async () => { ... }
+  */
 
   // Add new blood bank
   const addBloodBank = async () => {
@@ -99,7 +88,10 @@ function Admin() {
       return alert("Please fill all fields");
     }
     await addDoc(collection(db, "bloodBanks"), newBloodBank);
-    setNewBloodBank({ name: "", location: "", phone: "", hours: "" });
+    setNewBloodBank({
+      name: "", location: "", phone: "", hours: "",
+      bloodTypes: { "A+": 0, "A-": 0, "B+": 0, "B-": 0, "AB+": 0, "AB-": 0, "O+": 0, "O-": 0 }
+    });
     alert("Blood bank added successfully");
   };
 
@@ -124,16 +116,14 @@ function Admin() {
       lng: parseFloat(newHospital.lng),
       icuBeds: parseInt(newHospital.icuBeds) || 0
     });
-    setNewHospital({ name: "", lat: "", lng: "", icuBeds: "", oxygen: false, doctors: false });
+    setNewHospital({ name: "", lat: "", lng: "", icuBeds: "", oxygen: false, doctors: false, email: "", password: "" });
     alert("Hospital added successfully");
   };
 
   // Delete functions
-  const deleteAmbulance = async (id) => {
-    if (window.confirm("Delete this ambulance?")) {
-      await deleteDoc(doc(db, "ambulances", id));
-    }
-  };
+  /*
+  const deleteAmbulance = async (id) => { ... }
+  */
 
   const deleteBloodBank = async (id) => {
     if (window.confirm("Delete this blood bank?")) {
@@ -159,34 +149,10 @@ function Admin() {
 
       {/* Tab Navigation */}
       <div style={{ marginBottom: 20 }}>
-        <button
-          onClick={() => setActiveTab("emergencies")}
-          style={{
-            padding: "10px 20px",
-            marginRight: 10,
-            backgroundColor: activeTab === "emergencies" ? "#3498db" : "#ecf0f1",
-            color: activeTab === "emergencies" ? "white" : "black",
-            border: "none",
-            borderRadius: 5,
-            cursor: "pointer"
-          }}
-        >
-          🚨 Emergency Requests
-        </button>
-        <button
-          onClick={() => setActiveTab("ambulances")}
-          style={{
-            padding: "10px 20px",
-            marginRight: 10,
-            backgroundColor: activeTab === "ambulances" ? "#3498db" : "#ecf0f1",
-            color: activeTab === "ambulances" ? "white" : "black",
-            border: "none",
-            borderRadius: 5,
-            cursor: "pointer"
-          }}
-        >
-          🚑 Manage Ambulances
-        </button>
+        {/* Emergency Requests Tab Button - REMOVED */}
+        {/* <button onClick={() => setActiveTab("emergencies")} ... > 🚨 Emergency Requests </button> */}
+        {/* Ambulances Tab Button - Removed */}
+        {/* <button onClick={() => setActiveTab("ambulances")} ... > 🚑 Manage Ambulances </button> */}
         <button
           onClick={() => setActiveTab("bloodbanks")}
           style={{
@@ -230,121 +196,11 @@ function Admin() {
         </button>
       </div>
 
-      {/* Emergency Requests Tab */}
-      {activeTab === "emergencies" && (
-        <div>
-          <h3>🚨 Emergency Requests</h3>
-          {requests.length === 0 && <p>No emergency requests yet</p>}
+      {/* Emergency Requests Tab - REMOVED */}
 
-          {requests.map(req => (
-            <div key={req.id} style={{
-              border: "1px solid #ccc",
-              padding: 12,
-              marginBottom: 10,
-              borderRadius: 6
-            }}>
-              <p><b>Emergency:</b> {req.emergencyType}</p>
-              <p><b>Status:</b> {req.status}</p>
-              <a
-                href={`https://www.google.com/maps?q=${req.lat},${req.lng}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                📍 Open Patient Location in Google Maps
-              </a>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Ambulances Tab - REMOVED (Moved to Hospital Portal) */}
 
-      {/* Ambulances Tab */}
-      {activeTab === "ambulances" && (
-        <div>
-          <h3>🚑 Manage Ambulances</h3>
-
-          {/* Add New Ambulance Form */}
-          <div style={{ border: "1px solid #ccc", padding: 15, marginBottom: 20, borderRadius: 6 }}>
-            <h4>Add New Ambulance</h4>
-            <input
-              type="text"
-              placeholder="Ambulance Name"
-              value={newAmbulance.name}
-              onChange={e => setNewAmbulance({ ...newAmbulance, name: e.target.value })}
-              style={{ width: "100%", marginBottom: 10, padding: 8 }}
-            />
-            <input
-              type="text"
-              placeholder="Location"
-              value={newAmbulance.location}
-              onChange={e => setNewAmbulance({ ...newAmbulance, location: e.target.value })}
-              style={{ width: "100%", marginBottom: 10, padding: 8 }}
-            />
-            <input
-              type="tel"
-              placeholder="Phone Number"
-              value={newAmbulance.phone}
-              onChange={e => setNewAmbulance({ ...newAmbulance, phone: e.target.value })}
-              style={{ width: "100%", marginBottom: 10, padding: 8 }}
-            />
-            <label>
-              <input
-                type="checkbox"
-                checked={newAmbulance.available}
-                onChange={e => setNewAmbulance({ ...newAmbulance, available: e.target.checked })}
-              />
-              Available
-            </label>
-            <button
-              onClick={addAmbulance}
-              style={{
-                marginTop: 10,
-                padding: 10,
-                backgroundColor: "#3498db",
-                color: "white",
-                border: "none",
-                borderRadius: 5,
-                width: "100%"
-              }}
-            >
-              ➕ Add Ambulance
-            </button>
-          </div>
-
-          {/* List of Ambulances */}
-          <h4>Current Ambulances</h4>
-          {ambulances.length === 0 && <p>No ambulances registered</p>}
-          {ambulances.map(amb => (
-            <div key={amb.id} style={{
-              border: "1px solid #ccc",
-              padding: 12,
-              marginBottom: 10,
-              borderRadius: 6,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center"
-            }}>
-              <div>
-                <p><b>{amb.name}</b></p>
-                <p>📍 {amb.location}</p>
-                <p>📞 {amb.phone}</p>
-                <p>Status: {amb.available ? "✅ Available" : "❌ Unavailable"}</p>
-              </div>
-              <button
-                onClick={() => deleteAmbulance(amb.id)}
-                style={{
-                  padding: 8,
-                  backgroundColor: "#e74c3c",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 5
-                }}
-              >
-                🗑️ Delete
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Ambulances Tab - REMOVED (Moved to Hospital Portal) */}
 
       {/* Blood Banks Tab */}
       {activeTab === "bloodbanks" && (
@@ -382,6 +238,24 @@ function Admin() {
               onChange={e => setNewBloodBank({ ...newBloodBank, hours: e.target.value })}
               style={{ width: "100%", marginBottom: 10, padding: 8 }}
             />
+
+            <h5 style={{ margin: "10px 0 5px 0" }}>Available Units</h5>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", marginBottom: "15px" }}>
+              {Object.keys(newBloodBank.bloodTypes).map(type => (
+                <div key={type}>
+                  <label style={{ fontSize: "12px", display: "block", color: "#666" }}>{type}</label>
+                  <input
+                    type="number"
+                    value={newBloodBank.bloodTypes[type]}
+                    onChange={e => setNewBloodBank({
+                      ...newBloodBank,
+                      bloodTypes: { ...newBloodBank.bloodTypes, [type]: parseInt(e.target.value) || 0 }
+                    })}
+                    style={{ width: "100%", padding: "5px", border: "1px solid #ddd", borderRadius: "4px" }}
+                  />
+                </div>
+              ))}
+            </div>
             <button
               onClick={addBloodBank}
               style={{
@@ -538,52 +412,75 @@ function Admin() {
           {/* Add New Hospital Form */}
           <div style={{ border: "1px solid #ccc", padding: 15, marginBottom: 20, borderRadius: 6 }}>
             <h4>Add New Hospital</h4>
-            <input
-              type="text"
-              placeholder="Hospital Name"
-              value={newHospital.name}
-              onChange={e => setNewHospital({ ...newHospital, name: e.target.value })}
-              style={{ width: "100%", marginBottom: 10, padding: 8 }}
-            />
-            <input
-              type="number"
-              step="any"
-              placeholder="Latitude"
-              value={newHospital.lat}
-              onChange={e => setNewHospital({ ...newHospital, lat: e.target.value })}
-              style={{ width: "48%", marginBottom: 10, padding: 8, marginRight: "4%" }}
-            />
-            <input
-              type="number"
-              step="any"
-              placeholder="Longitude"
-              value={newHospital.lng}
-              onChange={e => setNewHospital({ ...newHospital, lng: e.target.value })}
-              style={{ width: "48%", marginBottom: 10, padding: 8 }}
-            />
-            <input
-              type="number"
-              placeholder="ICU Beds Available"
-              value={newHospital.icuBeds}
-              onChange={e => setNewHospital({ ...newHospital, icuBeds: e.target.value })}
-              style={{ width: "100%", marginBottom: 10, padding: 8 }}
-            />
-            <label style={{ marginRight: 20 }}>
+            <div style={{ display: "flex", gap: "10px", marginBottom: 10 }}>
               <input
-                type="checkbox"
-                checked={newHospital.oxygen}
-                onChange={e => setNewHospital({ ...newHospital, oxygen: e.target.checked })}
+                type="text"
+                placeholder="Hospital Name"
+                value={newHospital.name}
+                onChange={e => setNewHospital({ ...newHospital, name: e.target.value })}
+                style={{ flex: 2, padding: 8 }}
               />
-              Oxygen Available
-            </label>
-            <label>
               <input
-                type="checkbox"
-                checked={newHospital.doctors}
-                onChange={e => setNewHospital({ ...newHospital, doctors: e.target.checked })}
+                type="email"
+                placeholder="Login Email"
+                value={newHospital.email || ""}
+                onChange={e => setNewHospital({ ...newHospital, email: e.target.value })}
+                style={{ flex: 1, padding: 8 }}
               />
-              Doctors Available
-            </label>
+              <input
+                type="text"
+                placeholder="Login Password"
+                value={newHospital.password || ""}
+                onChange={e => setNewHospital({ ...newHospital, password: e.target.value })}
+                style={{ flex: 1, padding: 8 }}
+              />
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", marginBottom: 10 }}>
+              <input
+                type="number"
+                step="any"
+                placeholder="Latitude"
+                value={newHospital.lat}
+                onChange={e => setNewHospital({ ...newHospital, lat: e.target.value })}
+                style={{ flex: 1, padding: 8 }}
+              />
+              <input
+                type="number"
+                step="any"
+                placeholder="Longitude"
+                value={newHospital.lng}
+                onChange={e => setNewHospital({ ...newHospital, lng: e.target.value })}
+                style={{ flex: 1, padding: 8 }}
+              />
+              <input
+                type="number"
+                placeholder="ICU Beds"
+                value={newHospital.icuBeds}
+                onChange={e => setNewHospital({ ...newHospital, icuBeds: e.target.value })}
+                style={{ flex: 1, padding: 8 }}
+              />
+            </div>
+
+            <div style={{ marginBottom: 10 }}>
+              <label style={{ marginRight: 20 }}>
+                <input
+                  type="checkbox"
+                  checked={newHospital.oxygen}
+                  onChange={e => setNewHospital({ ...newHospital, oxygen: e.target.checked })}
+                />
+                Oxygen Available
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={newHospital.doctors}
+                  onChange={e => setNewHospital({ ...newHospital, doctors: e.target.checked })}
+                />
+                Doctors Available
+              </label>
+            </div>
+
             <button
               onClick={addHospital}
               style={{
@@ -615,6 +512,9 @@ function Admin() {
             }}>
               <div>
                 <p><b>{hosp.name}</b></p>
+                <p style={{ fontSize: "0.9em", color: "#666" }}>
+                  👤 {hosp.email} | 🔑 {hosp.password}
+                </p>
                 <p>📍 Lat: {hosp.lat}, Lng: {hosp.lng}</p>
                 <p>🛏️ ICU Beds: {hosp.icuBeds}</p>
                 <p>💨 Oxygen: {hosp.oxygen ? "✅" : "❌"} | 👨‍⚕️ Doctors: {hosp.doctors ? "✅" : "❌"}</p>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "./firebase";
 import Sidebar from "./Sidebar";
 import AmbulanceAvailability from "./AmbulanceAvailability";
@@ -12,7 +12,7 @@ function User() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [hospitals, setHospitals] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
-  const [bestHospital, setBestHospital] = useState(null);
+  const [rankedHospitals, setRankedHospitals] = useState([]);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -22,52 +22,38 @@ function User() {
   }, []);
 
   useEffect(() => {
-    async function fetchHospitals() {
-      const snap = await getDocs(collection(db, "hospitals"));
+    const unsub = onSnapshot(collection(db, "hospitals"), snap => {
       setHospitals(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    }
-    fetchHospitals();
+    });
+    return () => unsub();
   }, []);
 
-  const distance = (a,b,c,d) => {
+  const distance = (a, b, c, d) => {
     const R = 6371;
-    const dLat = (c-a) * Math.PI/180;
-    const dLon = (d-b) * Math.PI/180;
-    const x = Math.sin(dLat/2)**2 +
-              Math.cos(a*Math.PI/180) *
-              Math.cos(c*Math.PI/180) *
-              Math.sin(dLon/2)**2;
-    return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
+    const dLat = (c - a) * Math.PI / 180;
+    const dLon = (d - b) * Math.PI / 180;
+    const x = Math.sin(dLat / 2) ** 2 +
+      Math.cos(a * Math.PI / 180) *
+      Math.cos(c * Math.PI / 180) *
+      Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
   };
 
   useEffect(() => {
-    if(!userLocation || hospitals.length===0) return;
+    if (!userLocation || hospitals.length === 0) return;
 
-    const ranked = hospitals.map(h=>({
+    const ranked = hospitals.map(h => ({
       ...h,
-      distance: distance(userLocation.lat,userLocation.lng,h.lat,h.lng)
+      distance: distance(userLocation.lat, userLocation.lng, h.lat, h.lng)
     }))
-    .filter(h=>h.distance<=200 && h.icuBeds>0 && h.oxygen && h.doctors)
-    .sort((a,b)=>a.distance-b.distance);
+      .filter(h => h.icuBeds > 0 || h.oxygen || h.doctors) // Show if ANY resource is available, removed distance limit
+      .sort((a, b) => a.distance - b.distance);
 
-    setBestHospital(ranked[0] || null);
-  },[userLocation,hospitals]);
-
-  const notifyHospital = async () => {
-    if(!bestHospital) return;
-
-    await addDoc(collection(db,"emergencyRequests"),{
-      hospitalId:bestHospital.id,
-      lat:userLocation.lat,
-      lng:userLocation.lng,
-      status:"Pending",
-      timestamp:serverTimestamp()
-    });
-    alert("Hospital notified");
-  };
+    setRankedHospitals(ranked);
+  }, [userLocation, hospitals]);
 
   const renderCurrentPage = () => {
-    switch(currentPage) {
+    switch (currentPage) {
       case "emergency":
         return (
           <div style={{ padding: "20px" }}>
@@ -75,26 +61,9 @@ function User() {
 
             {!userLocation && <p>Getting your location...</p>}
 
-            {bestHospital && (
-              <div className="emergency-card">
-                <h3 style={{ color: "var(--color-success)", marginTop: "0" }}>🏥 Recommended Hospital</h3>
-                <p><strong>Name:</strong> {bestHospital.name}</p>
-                <p><strong>Distance:</strong> {bestHospital.distance.toFixed(2)} km</p>
-                <p><strong>ICU Beds:</strong> {bestHospital.icuBeds}</p>
-                <p><strong>Oxygen:</strong> Available</p>
-                <p><strong>Doctors:</strong> Available</p>
+            {!userLocation && hospitals.length === 0 && <p>Loading hospitals...</p>}
 
-                <button
-                  onClick={notifyHospital}
-                  className="btn btn-success"
-                  style={{ marginTop: "15px" }}
-                >
-                  🚨 Notify Hospital Now
-                </button>
-              </div>
-            )}
-
-            {!bestHospital && userLocation && (
+            {userLocation && rankedHospitals.length === 0 && (
               <div className="card" style={{
                 border: "2px solid var(--color-warning)",
                 backgroundColor: "rgba(171, 71, 188, 0.05)",
@@ -104,7 +73,52 @@ function User() {
                 <p>Please try the Ambulance service or contact emergency services directly.</p>
               </div>
             )}
-          </div>
+
+            {rankedHospitals.map((hospital, index) => (
+              <div key={hospital.id} className="emergency-card" style={{ marginBottom: "20px", position: "relative" }}>
+                {index === 0 && (
+                  <span style={{
+                    position: "absolute",
+                    top: "-10px",
+                    right: "-10px",
+                    backgroundColor: "#2ecc71",
+                    color: "white",
+                    padding: "5px 10px",
+                    borderRadius: "20px",
+                    fontWeight: "bold",
+                    fontSize: "0.8rem",
+                    boxShadow: "0 2px 5px rgba(0,0,0,0.2)"
+                  }}>
+                    🌟 Nearest
+                  </span>
+                )}
+                <h3 style={{ color: "var(--color-success)", marginTop: "0" }}>🏥 {hospital.name}</h3>
+                <p><strong>Distance:</strong> {hospital.distance.toFixed(2)} km</p>
+                <div style={{ display: "flex", gap: "15px", margin: "10px 0" }}>
+                  <span style={{ color: hospital.icuBeds > 0 ? "green" : "red" }}>🛏️ Beds: {hospital.icuBeds}</span>
+                  <span style={{ color: hospital.oxygen ? "green" : "red" }}>💨 Oxygen: {hospital.oxygen ? "Yes" : "No"}</span>
+                  <span style={{ color: hospital.doctors ? "green" : "red" }}>👨‍⚕️ Doctors: {hospital.doctors ? "Yes" : "No"}</span>
+                </div>
+
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${hospital.lat},${hospital.lng}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-success"
+                  style={{
+                    marginTop: "10px",
+                    fontSize: "1rem",
+                    textAlign: "center",
+                    display: "inline-block",
+                    textDecoration: "none",
+                    width: "100%"
+                  }}
+                >
+                  📍 Get Directions
+                </a>
+              </div>
+            ))}
+          </div >
         );
       case "ambulance":
         return <AmbulanceAvailability />;
