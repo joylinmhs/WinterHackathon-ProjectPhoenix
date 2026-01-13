@@ -4,7 +4,7 @@
 Sanjeevani is a comprehensive healthcare emergency response platform designed to bridge the gap between patients and critical medical resources. It helps users find the nearest emergency hospitals with real-time availability of ICU beds, oxygen, and doctors. It also provides blood bank information, ambulance availability, and essential first aid tips.
 
 ## Demo Video Link
-(Insert Google Drive link here)
+https://drive.google.com/file/d/10k8OJcqClCbWD03TFLek8esPXC5YMfl7/view?usp=drivesdk
 
 ## Features
 - **Emergency Hospital Finder:** Locates nearest hospitals based on geolocation and sorts them by distance and resource availability.
