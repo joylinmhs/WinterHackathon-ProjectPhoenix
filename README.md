@@ -49,3 +49,7 @@ Steps to run the project locally:
 - Dakshayini
 - Joylin Mathias
 - Tejashwini K M
+
+## Contribution
+Frontend- Aditi, Dakshayini, Tejashwini, Joylin
+Backend- Joylin, Dakshayini
