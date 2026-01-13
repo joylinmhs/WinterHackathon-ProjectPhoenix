@@ -51,5 +51,5 @@ Steps to run the project locally:
 - Tejashwini K M
 
 ## Contribution
-Frontend- Aditi, Dakshayini, Tejashwini, Joylin
-Backend- Joylin, Dakshayini
+- Frontend- Aditi, Dakshayini, Tejashwini, Joylin
+- Backend- Joylin, Dakshayini
