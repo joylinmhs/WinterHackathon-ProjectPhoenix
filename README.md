@@ -1,6 +1,6 @@
 # Sanjeevani (Project Phoenix)
 
-## Description
+## Description 
 Sanjeevani is a comprehensive healthcare emergency response platform designed to bridge the gap between patients and critical medical resources. It helps users find the nearest emergency hospitals with real-time availability of ICU beds, oxygen, and doctors. It also provides blood bank information, ambulance availability, and essential first aid tips.
 
 ## Demo Video Link
