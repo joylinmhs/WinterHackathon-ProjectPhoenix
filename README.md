@@ -45,7 +45,7 @@ Steps to run the project locally:
    ```
 
 ## Team Members
-- Aditi J N
+- Aditi J N 
 - Dakshayini
 - Joylin Mathias
 - Tejashwini K M
